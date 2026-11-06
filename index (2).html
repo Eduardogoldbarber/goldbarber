@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Alta Performance Gold Barber • Destaque do Mês</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f4ef">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700;800&display=swap">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#151515; --mute:#6b6b6b; --line:#e4e0d6;
+  --gold:#c9a227; --gold2:#e8c85a; --silver:#a9b0b7; --bronze:#b87333; --dark:#1b1b1b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;min-height:100%}
+.wrap{max-width:720px;margin:0 auto;padding:14px 14px 40px}
+.brand{text-align:center;padding:10px 0 4px}
+.brand .logo{font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:26px;letter-spacing:2px;line-height:1.15}
+.brand .logo span{color:var(--gold)}
+.brand .sub{font-size:11px;letter-spacing:4px;color:var(--mute);text-transform:uppercase;margin-top:2px}
+.gline{height:3px;width:90px;margin:10px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+label{display:block;font-size:12px;font-weight:600;color:var(--mute);margin:12px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:15px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:130px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold2);border-color:var(--gold)}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--dark);color:#fff;border:0;border-radius:12px;padding:13px 16px;font-weight:700;width:100%;margin-top:16px}
+.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#231b00}
+.btn.small{width:auto;padding:8px 12px;font-size:13px;margin:0}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.red{background:#fff;color:#b3261e;border:1px solid #efc7c3}
+.btn:disabled{opacity:.5}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
+.who{font-size:12px;color:var(--mute)}
+.who b{color:var(--ink)}
+.month{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:800;margin:6px 0 0}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:12px 14px 6px;margin:0 -14px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.tab.on{background:var(--dark);color:var(--gold2);border-color:var(--dark)}
+.tab.adm{border-style:dashed}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600}
+.chip.on{background:var(--gold);color:#231b00;border-color:var(--gold)}
+.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:end;margin:14px 0 8px}
+.pc{background:var(--card);border-radius:16px;border:2px solid var(--line);padding:12px 6px 14px;text-align:center;min-width:0}
+.pc.p1{border-color:var(--gold);background:linear-gradient(180deg,#fff8dc,#fff);padding-top:18px;padding-bottom:22px;box-shadow:0 8px 22px rgba(201,162,39,.25)}
+.pc.p2{border-color:var(--silver);background:linear-gradient(180deg,#f1f3f5,#fff)}
+.pc.p3{border-color:var(--bronze);background:linear-gradient(180deg,#f8e9db,#fff)}
+.pc .trophy{font-size:22px;line-height:1;margin-bottom:2px}
+.pc svg{display:block;margin:0 auto}
+.pc .nm{font-weight:800;font-size:13px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.pc .pt{font-size:22px;font-weight:800;margin-top:2px}
+.pc.p1 .pt{font-size:26px;color:#8a6d0b}
+.pc .un{font-size:10px;color:var(--mute);letter-spacing:1px;text-transform:uppercase}
+.pc .dt{font-size:11px;color:var(--mute);margin-top:4px}
+.pc.empty{opacity:.45}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin:8px 0}
+.row .n{width:28px;height:28px;border-radius:50%;background:var(--dark);color:var(--gold2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:0 0 auto}
+.row .nm{flex:1;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .pt{font-weight:800}
+.row .dt{font-size:11px;color:var(--mute);font-weight:600}
+.h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--mute);font-weight:700;margin:20px 0 6px}
+.me{outline:2px solid var(--gold);outline-offset:1px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 90px 40px;gap:8px;align-items:center;margin:8px 0}
+.iconbtn{border:1px solid #efc7c3;background:#fff;color:#b3261e;border-radius:10px;height:42px;min-width:38px;font-weight:800}
+details{border:1px solid var(--line);border-radius:12px;margin:8px 0;background:#fff}
+summary{padding:13px 14px;font-weight:800;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary small{color:var(--mute);font-weight:600}
+.dbody{padding:0 14px 14px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 8px;font-weight:700;font-size:13px}
+.seg button.on{background:var(--dark);color:var(--gold2);border-color:var(--dark)}
+.lock{text-align:center;padding:30px 18px;border:2px dashed var(--gold);background:linear-gradient(180deg,#fffaf0,#fff)}
+.lock .big{font-size:54px;line-height:1}
+.lock .msg{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:800;margin:14px 0 10px;line-height:1.3}
+.lock .cd{display:inline-block;background:var(--dark);color:var(--gold2);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;letter-spacing:1px}
+.note{font-size:12px;color:var(--mute);line-height:1.5}
+.banner{background:#fff8dc;border:1px solid var(--gold2);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:600;margin:10px 0}
+.logrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.logrow small{color:var(--mute);display:block}
+.splash{position:relative;text-align:center;padding:26px 8px 30px;overflow:hidden;border-radius:24px;background:radial-gradient(circle at 50% 0%,#fff6cf 0%,#fffdf6 55%,#fff 100%);border:2px solid var(--gold);margin:14px 0;box-shadow:0 12px 40px rgba(201,162,39,.28)}
+.splash .crown{width:150px;margin:0 auto -34px;position:relative;z-index:2;animation:flt 3s ease-in-out infinite;filter:drop-shadow(0 6px 8px rgba(120,90,0,.35))}
+.splash .ph{width:210px;height:210px;border-radius:50%;margin:0 auto;border:7px solid var(--gold);box-shadow:0 0 0 5px #fff,0 0 34px rgba(232,200,90,.9);overflow:hidden;background:linear-gradient(135deg,var(--gold2),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',Georgia,serif;font-size:80px;font-weight:800;color:#231b00;position:relative;z-index:1}
+.splash .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.splash .pk{font-family:'Playfair Display',Georgia,serif;font-size:38px;font-weight:800;letter-spacing:3px;margin-top:22px;background:linear-gradient(90deg,#8a6d0b,#e8c85a,#8a6d0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.splash .pn{font-size:32px;font-weight:800;margin-top:6px;padding:0 10px;word-break:break-word}
+.splash .ps{font-size:11px;letter-spacing:3px;font-weight:700;color:var(--mute);margin-top:8px;text-transform:uppercase}
+.splash .pp{display:inline-block;margin-top:14px;background:var(--dark);color:var(--gold2);border-radius:999px;padding:9px 20px;font-weight:800;font-size:16px}
+.splash .pm{font-size:14px;line-height:1.6;margin:16px auto 0;max-width:420px;padding:0 16px;color:#333}
+.splash .btn{max-width:320px;margin:20px auto 0;display:block}
+.cf{position:absolute;top:-14px;width:9px;height:16px;border-radius:2px;opacity:.9;animation:fall 4.5s linear infinite;pointer-events:none}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0)}100%{transform:translateY(760px) rotate(540deg)}}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:reduce){.cf,.splash .crown{animation:none}}
+.avatar{width:54px;height:54px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,var(--gold2),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:800;color:#231b00;overflow:hidden;flex:0 0 auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--dark);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;z-index:9;max-width:90%}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="card note">Carregando…</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* =====================================================================
+   ALTA PERFORMANCE GOLD BARBER • Destaque do Mês  (versão Supabase)
+   ===================================================================== */
+const SUPABASE_URL='https://qppralqvyfssoaclycjh.supabase.co';
+const SUPABASE_KEY='sb_publishable_Q4tdbxxJbwqZVbXUg4lrwQ_jrzBBq0L';   // Project Settings → API → "anon / publishable key"
+
+const app=document.getElementById('app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{v=parseInt(v,10);return isNaN(v)||v<0?0:v};
+const dec=v=>{v=parseFloat(String(v).replace(',','.'));return isNaN(v)||v<0?0:v};
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)}
+const DEFMSG=['🤫 Boca de siri! O destaque do mês está no forno e ninguém pode espiar.','🕵️ Quem será o barbeiro destaque? Só a tesoura sabe… e ela não fala.','🥁 Suspense total! O ranking foi trancado no cofre da Gold Barber.'];
+
+let sb=null,user=null,prof=null,cfg=null,services=[],barbers=[],months=[],ranks={},adminQ=[],evalsM=[],users=[],myEntries=[];
+let tab=null,vm=null,form={k:'e',s:'',q:1},preview=false,pvForce=null,splashSeen=false,demoM=null,evM=null,fltText='',authMode='in',hist={};
+
+/* ---------- datas ---------- */
+const mkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+const curKey=()=>mkey(new Date());
+const prevKey=()=>{const d=new Date();return mkey(new Date(d.getFullYear(),d.getMonth()-1,1))};
+function mlabel(k){const[y,m]=k.split('-');const s=new Date(+y,+m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});return s.charAt(0).toUpperCase()+s.slice(1)}
+function daysLeft(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).getDate()-d.getDate()+1}
+function defaultView(){const d=new Date();return (d.getDate()<=7&&months.includes(prevKey()))?prevKey():curKey()}
+function fmtDT(t){const d=new Date(t);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+
+/* ---------- perfil ---------- */
+const isA=()=>!!(prof&&prof.role==='A');
+const myBarber=()=>barbers.find(b=>b.user_id===(user&&user.id));
+const svName=id=>{const s=services.find(v=>v.id===id);return s?s.name:'Serviço removido'};
+
+/* ---------- pontuação ---------- */
+function stats(m){
+  const d=ranks[m];if(!d||!d.rows)return [];
+  return d.rows.map(r=>{
+    const s={id:r.id,name:r.name||'Sem nome',uid:r.uid,eq:num(r.eq),ep:num(r.ep),sq:num(r.sq),pq:num(r.pq),rq:num(r.rq),pod:Number(r.pod)||0,ret:Number(r.ret)||0};
+    s.sp=s.sq*num(cfg.sub);s.pp=tierPts(s.pq);s.rp=s.rq*num(cfg.reel);
+    s.podp=s.pod*(Number(cfg.pod_pts)||0);s.retp=s.ret*(Number(cfg.ret_pts)||0);
+    s.tp=Math.round((s.ep+s.sp+s.pp+s.rp+s.podp+s.retp)*10)/10;
+    return s;
+  });
+}
+const F1=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
+const CATS={
+  total:{label:'🏆 Destaque do Mês',pts:s=>s.tp,det:s=>'pontos totais',fmt:F1},
+  extras:{label:'✂️ Serviços Extras',pts:s=>s.ep,det:s=>s.eq+' serviços'},
+  subs:{label:'💳 Assinaturas',pts:s=>s.sp,det:s=>s.sq+' vendas'},
+  prods:{label:'🧴 Produtos',pts:s=>s.pp,det:s=>brl(s.pq)+' em vendas'},
+  reels:{label:'📸 Metagram',pts:s=>s.rp,det:s=>s.rq+' reels'},
+  pod:{label:'🏅 Pódium',pts:s=>s.pod,det:s=>'de assinantes',unit:'%',fmt:F1},
+  ret:{label:'🔁 Taxa de Retorno',pts:s=>s.ret,det:s=>'de retorno',unit:'%',fmt:F1}
+};
+const DEFTIERS=[{min:300,pts:80},{min:600,pts:170},{min:1200,pts:250}];
+const tiers=()=>(Array.isArray(cfg.prod_tiers)&&cfg.prod_tiers.length?cfg.prod_tiers:DEFTIERS).map(t=>({min:num(t.min),pts:num(t.pts)})).sort((a,b)=>a.min-b.min);
+function tierPts(v){let p=0;tiers().forEach(t=>{if(v>=t.min&&t.min>0)p=Math.max(p,t.pts)});return p}
+const brl=v=>'R$ '+Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0});
+const tiersText=()=>tiers().map(t=>`${brl(t.min)} → ${t.pts} pts`).join(' • ');
+function leader(m){const l=stats(m).sort((a,b)=>b.tp-a.tp||a.name.localeCompare(b.name))[0];return(l&&l.tp>0)?l:null}
+function medal(n){
+  const c={1:['#f7dc7a','#c9a227','#7a5f08'],2:['#f0f2f4','#aab1b8','#69737b'],3:['#efc39a','#b87333','#6d4116']}[n];
+  const rib={1:'#1b1b1b',2:'#555',3:'#7a3b12'}[n];
+  return `<svg viewBox="0 0 48 66" width="${n===1?58:48}" height="${n===1?80:66}" aria-hidden="true"><path d="M11 0h10l7 24h-10z" fill="${rib}"/><path d="M37 0H27l-7 24h10z" fill="${c[1]}"/><circle cx="24" cy="44" r="19" fill="${c[1]}" stroke="${c[2]}" stroke-width="3"/><circle cx="24" cy="44" r="13.5" fill="${c[0]}" stroke="${c[2]}" stroke-width="1.5"/><text x="24" y="50.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-weight="800" font-size="18" fill="${c[2]}">${n}</text></svg>`;
+}
+function crownSvg(){
+  return `<svg viewBox="0 0 120 84" class="crown" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a8"/><stop offset=".5" stop-color="#e8c85a"/><stop offset="1" stop-color="#a67c00"/></linearGradient></defs>
+  <path d="M8 72 L16 24 L40 48 L60 10 L80 48 L104 24 L112 72 Z" fill="url(#cg)" stroke="#8a6d0b" stroke-width="2.5" stroke-linejoin="round"/>
+  <rect x="8" y="62" width="104" height="14" rx="4" fill="url(#cg)" stroke="#8a6d0b" stroke-width="2.5"/>
+  <circle cx="16" cy="22" r="6" fill="#fff" stroke="#8a6d0b" stroke-width="2"/><circle cx="60" cy="9" r="7" fill="#e0245e" stroke="#8a6d0b" stroke-width="2"/><circle cx="104" cy="22" r="6" fill="#fff" stroke="#8a6d0b" stroke-width="2"/>
+  <circle cx="34" cy="69" r="3.6" fill="#1e88e5"/><circle cx="60" cy="69" r="4.2" fill="#e0245e"/><circle cx="86" cy="69" r="3.6" fill="#1e88e5"/>
+  <path d="M60 24 L66 40 L60 52 L54 40 Z" fill="#fff8d6" opacity=".55"/></svg>`;
+}
+const header=()=>`<div class="brand"><div class="logo">ALTA PERFORMANCE<br><span>GOLD BARBER</span></div><div class="sub">Destaque do Mês</div><div class="gline"></div></div>`;
+const on=(root,id,fn)=>{const e=root.querySelector('#'+id);if(e)e.onclick=fn};
+function fail(e){console.error(e);toast((e&&e.message)||'Algo deu errado')}
+
+/* ---------- carga de dados ---------- */
+async function loadCore(){
+  const [c,s,b,m]=await Promise.all([
+    sb.from('config').select('*').eq('id',1).single(),
+    sb.from('services').select('*').order('created_at'),
+    sb.from('barbers').select('*').order('name'),
+    sb.rpc('list_months')]);
+  if(c.error)throw c.error;
+  cfg=c.data;services=s.data||[];barbers=b.data||[];
+  months=(m.data&&m.data.length?m.data:[curKey()]);if(!months.includes(curKey()))months.unshift(curKey());
+}
+async function loadRank(m){const{data,error}=await sb.rpc('get_ranking',{p_month:m});if(error){fail(error);return}ranks[m]=data}
+async function loadMine(){const mb=myBarber();if(!mb){myEntries=[];return}const{data}=await sb.from('entries').select('*').eq('barber_id',mb.id).order('created_at',{ascending:false}).limit(200);myEntries=data||[]}
+async function loadAdmin(){
+  if(!evM)evM=curKey();
+  const [q,e]=await Promise.all([sb.rpc('admin_qty',{p_month:curKey()}),sb.from('evals').select('*').eq('month',evM)]);
+  adminQ=q.data||[];evalsM=e.data||[];
+}
+async function loadUsers(){const{data}=await sb.from('profiles').select('*').order('created_at');users=data||[]}
+async function loadProfile(){const{data,error}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();if(error)throw error;prof=data}
+
+async function afterLogin(){
+  try{
+    await loadProfile();
+    if(!prof||!prof.role){render();return}
+    await loadCore();vm=defaultView();await loadRank(vm);await loadMine();
+    tab=isA()?'total':'launch';render();
+  }catch(e){fail(e);render()}
+}
+async function openTab(t){
+  tab=t;
+  try{
+    if(t in CATS)await loadRank(vm);
+    if(t==='launch'||t==='mine')await loadMine();
+    if(t==='barbers')await loadAdmin();
+    if(t==='users')await loadUsers();
+    if(t==='cfg')await loadCore();
+  }catch(e){fail(e)}
+  render();
+}
+
+/* ---------- autenticação ---------- */
+function renderAuth(msg){
+  const up=authMode==='up';
+  app.innerHTML=header()+`<div class="card">
+   <div class="seg"><button class="${!up?'on':''}" data-am="in">Entrar</button><button class="${up?'on':''}" data-am="up">Criar conta</button></div>
+   ${up?'<label for="an">Seu nome</label><input id="an" maxlength="30" autocomplete="name" placeholder="Ex.: João">':''}
+   <label for="ae">E-mail</label><input id="ae" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com">
+   <label for="ap">Senha</label><input id="ap" type="password" autocomplete="${up?'new-password':'current-password'}" placeholder="${up?'mínimo 6 caracteres':'sua senha'}">
+   <div class="err" id="ar">${esc(msg||'')}</div>
+   <button class="btn gold" id="ab">${up?'Criar conta':'Entrar'}</button>
+   ${up?'<p class="note">Depois de criar a conta, o administrador precisa aprovar o seu acesso.</p>':''}</div>`;
+  app.querySelectorAll('[data-am]').forEach(b=>b.onclick=()=>{authMode=b.dataset.am;renderAuth()});
+  const go=async()=>{
+    const email=app.querySelector('#ae').value.trim(),pw=app.querySelector('#ap').value;
+    const nm=up?app.querySelector('#an').value.trim():'';
+    if(!email||!pw){renderAuth('Preencha e-mail e senha.');return}
+    if(up&&!nm){renderAuth('Digite seu nome.');return}
+    const btn=app.querySelector('#ab');btn.disabled=true;
+    let r;
+    if(up)r=await sb.auth.signUp({email,password:pw,options:{data:{name:nm}}});
+    else r=await sb.auth.signInWithPassword({email,password:pw});
+    if(r.error){renderAuth(r.error.message==='Invalid login credentials'?'E-mail ou senha incorretos.':r.error.message);return}
+    if(up&&!r.data.session){renderAuth('Conta criada! Confirme o e-mail que enviamos e depois entre.');return}
+  };
+  app.querySelector('#ab').onclick=go;
+  app.querySelector('#ap').onkeydown=e=>{if(e.key==='Enter')go()};
+}
+function renderPending(){
+  app.innerHTML=header()+`<div class="card"><b>Aguardando aprovação</b><p class="note">Sua conta (${esc(prof?prof.email:user.email)}) foi criada. Assim que o administrador liberar o seu acesso, toque em Atualizar.</p>
+   <button class="btn gold" id="rf">Atualizar</button><button class="btn ghost" id="lo">Sair</button></div>`;
+  on(app,'rf',afterLogin);on(app,'lo',logout);
+}
+async function logout(){await sb.auth.signOut();prof=null;cfg=null;ranks={};tab=null;preview=false;splashSeen=false;renderAuth()}
+
+/* ---------- tela principal ---------- */
+function render(){
+  if(!sb)return;
+  if(!user)return renderAuth();
+  if(!prof)return app.innerHTML=header()+'<div class="card note">Carregando…</div>';
+  if(!prof.role)return renderPending();
+  if(!cfg)return app.innerHTML=header()+'<div class="card note">Carregando…</div>';
+  const adm=isA()&&!preview;
+  if(demoM&&isA()&&!preview){const L=leader(demoM);if(L){renderSplash({m:demoM,bid:L.id,name:L.name,pts:L.tp},true);return}demoM=null}
+  if(cfg.splash&&cfg.splash.bid&&!splashSeen&&(!isA()||preview)){renderSplash(cfg.splash,false);return}
+  const barberTabs=['launch','mine'],adminTabs=['barbers','users','cfg'];
+  if(!tab||(adm&&barberTabs.includes(tab))||(!adm&&adminTabs.includes(tab)))tab=adm?'total':'launch';
+  if(!vm)vm=defaultView();
+  let t='';
+  if(!adm)t+=`<button class="tab ${tab==='launch'?'on':''}" data-t="launch">➕ Lançar</button>`;
+  Object.entries(CATS).forEach(([k,c])=>t+=`<button class="tab ${tab===k?'on':''}" data-t="${k}">${c.label}</button>`);
+  if(!adm)t+=`<button class="tab ${tab==='mine'?'on':''}" data-t="mine">📋 Meus lançamentos</button>`;
+  if(adm)t+=`<button class="tab adm ${tab==='barbers'?'on':''}" data-t="barbers">👥 Barbeiros</button><button class="tab adm ${tab==='users'?'on':''}" data-t="users">👤 Usuários</button><button class="tab adm ${tab==='cfg'?'on':''}" data-t="cfg">⚙️ Configurar</button>`;
+  const inRank=tab in CATS;
+  let chips='';
+  if(inRank&&months.length>1)chips=`<div class="chips">`+months.map(k=>`<button class="chip ${k===vm?'on':''}" data-m="${k}">${mlabel(k)}</button>`).join('')+`</div>`;
+  let pv='';
+  if(preview)pv=`<div class="banner">👁 <b>Prévia:</b> assim os barbeiros (perfil B) veem o app.
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="chip ${pvForce==='lock'?'on':''}" id="pvl">🔒 Simular última semana</button><button class="chip ${pvForce==='open'?'on':''}" id="pvo">🏅 Simular ranking aberto</button><button class="chip ${!pvForce?'on':''}" id="pvr">📅 Hoje (real)</button></div></div>`;
+  const who=adm?'Administrador':esc(prof.name||'Você');
+  app.innerHTML=header()+`<div class="top"><div class="who">Olá, <b>${who}</b> <span class="note">(perfil ${prof.role})</span></div>
+   <div style="display:flex;gap:6px">${isA()?(preview?'<button class="btn small gold" id="pvx">Sair da prévia</button>':'<button class="btn small ghost" id="pvb">👁 Ver como B</button>'):''}<button class="btn small ghost" id="lo">Sair</button></div></div>${pv}
+   <div class="month">${esc(mlabel(inRank?vm:curKey()))}</div><div class="tabs">${t}</div>${chips}<div id="body"></div>`;
+  app.querySelectorAll('.tab').forEach(b=>b.onclick=()=>openTab(b.dataset.t));
+  app.querySelectorAll('.chip[data-m]').forEach(b=>b.onclick=async()=>{vm=b.dataset.m;await loadRank(vm);render()});
+  on(app,'lo',logout);
+  on(app,'pvb',()=>{preview=true;pvForce=null;splashSeen=false;tab='launch';openTab('launch')});
+  on(app,'pvx',()=>{preview=false;pvForce=null;tab='total';openTab('total')});
+  on(app,'pvl',()=>{pvForce='lock';render()});on(app,'pvo',()=>{pvForce='open';render()});on(app,'pvr',()=>{pvForce=null;render()});
+  const body=document.getElementById('body');
+  if(inRank)renderRank(body,tab,adm);
+  else if(tab==='launch')renderLaunch(body);
+  else if(tab==='mine')renderMine(body);
+  else if(tab==='barbers'&&adm)renderBarbers(body);
+  else if(tab==='users'&&adm)renderUsers(body);
+  else if(tab==='cfg'&&adm)renderCfg(body);
+}
+
+/* ---------- ranking ---------- */
+function renderLock(k){
+  const msgs=(cfg.messages&&cfg.messages.length?cfg.messages:DEFMSG);
+  const m=msgs[new Date().getDate()%msgs.length];const n=daysLeft();
+  return `<div class="card lock"><div class="big">🔒</div><div class="msg">${esc(m)}</div><span class="cd">${k===curKey()?'REVELAÇÃO EM '+n+' DIA'+(n>1?'S':''):'EM BREVE'}</span></div>`;
+}
+function relCard(){
+  const L=leader(vm);const on_=(cfg.released||[]).includes(vm);
+  return `<div class="card" style="border:2px solid var(--gold)"><b>🎉 Destaque de ${esc(mlabel(vm))}</b>
+   <p class="note">${L?`Líder agora: <b>${esc(L.name)}</b> com ${F1(L.tp)} pts.`:'Ainda sem pontos neste mês.'}<br>Status: <b>${on_?'✅ liberado para todos':'🔒 escondido dos barbeiros'}</b></p>
+   ${on_?'<button class="btn red" id="relx">Esconder de novo</button>':'<button class="btn gold" id="relgo">🎉 Liberar destaque para todos</button>'}
+   <button class="btn ghost" id="relpv">👁 Ver a tela de parabéns</button></div>`;
+}
+function bindRel(el){
+  on(el,'relgo',async()=>{
+    const L=leader(vm);if(!L){toast('Ainda não há pontos neste mês');return}
+    if(!confirm('Liberar o destaque de '+mlabel(vm)+' ('+L.name+') para TODOS?'))return;
+    const rel=[...new Set([...(cfg.released||[]),vm])];
+    const{error}=await sb.from('config').update({splash:{m:vm,bid:L.id,name:L.name,pts:L.tp},released:rel}).eq('id',1);
+    if(error)return fail(error);await loadCore();await loadRank(vm);render();toast('Destaque liberado! 🎉');
+  });
+  on(el,'relx',async()=>{
+    const rel=(cfg.released||[]).filter(x=>x!==vm);
+    const{error}=await sb.from('config').update({splash:null,released:rel}).eq('id',1);
+    if(error)return fail(error);await loadCore();await loadRank(vm);render();toast('Destaque escondido de novo');
+  });
+  on(el,'relpv',()=>{if(!leader(vm)){toast('Ainda não há pontos neste mês');return}demoM=vm;render()});
+}
+function renderRank(el,k,adm){
+  const d=ranks[vm];
+  if(!d){el.innerHTML='<div class="card note">Carregando…</div>';return}
+  const showLock=preview?(pvForce?pvForce==='lock':d.locked):(d.locked&&!isA());
+  if(showLock){el.innerHTML=renderLock(vm);return}
+  const c=CATS[k],F=c.fmt||(v=>v),U=c.unit||'pts';
+  const list=stats(vm).map(s=>({s,p:c.pts(s)})).sort((a,b)=>b.p-a.p||a.s.name.localeCompare(b.s.name));
+  const pod=[0,1,2].map(i=>{
+    const it=list[i],n=i+1;
+    if(!it)return `<div class="pc p${n} empty">${medal(n)}<div class="nm">—</div><div class="pt">0</div></div>`;
+    return `<div class="pc p${n} ${it.s.uid&&it.s.uid===user.id?'me':''}">${n===1?'<div class="trophy">🏆</div>':''}${medal(n)}<div class="nm">${esc(it.s.name)}</div><div class="pt">${F(it.p)}</div><div class="un">${U}</div><div class="dt">${c.det(it.s)}</div></div>`;
+  }).join('');
+  const mini={1:'🥇',2:'🥈',3:'🥉'};
+  const rows=list.map((it,i)=>`<div class="row ${it.s.uid&&it.s.uid===user.id?'me':''}" data-nm="${esc(it.s.name.toLowerCase())}"><div class="n">${i+1}</div><div class="nm">${esc(it.s.name)}<div class="dt">${c.det(it.s)}</div></div><div class="pt">${i<3?mini[i+1]+' ':''}${F(it.p)} ${U}</div></div>`).join('');
+  let extra='';
+  if(k==='extras')extra=`<div class="h2">Tabela de pontos</div><div class="card" style="padding:6px 14px">`+services.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${esc(s.name)}</span><b>${num(s.pts)} pts</b></div>`).join('')+`</div>`;
+  else if(k==='pod'||k==='ret')extra=`<div class="h2">Como funciona</div><div class="card note">${k==='pod'?'Porcentagem de clientes atendidos por cada barbeiro que são assinantes.':'Porcentagem de clientes de cada barbeiro que voltaram.'} Quem preenche é o administrador, no último dia do mês. Até lá fica zerado.</div>`;
+  else if(k==='prods')extra=`<div class="h2">Como funciona</div><div class="card note">Vale a maior faixa alcançada no mês: <b>${tiersText()}</b>. Abaixo de ${brl(tiers()[0]?tiers()[0].min:300)} não pontua.</div>`;
+  else if(k==='total')extra=`<div class="h2">Como se ganha ponto</div><div class="card note">Serviços extras (veja a tabela na aba Serviços Extras) • Assinatura vendida: <b>${num(cfg.sub)} pts</b> • Produtos (por faixa de vendas): <b>${tiersText()}</b> • Reel postado: <b>${num(cfg.reel)} pts</b>${(Number(cfg.pod_pts)||Number(cfg.ret_pts))?` • Pódium: <b>${Number(cfg.pod_pts)||0} pt por 1%</b> • Taxa de retorno: <b>${Number(cfg.ret_pts)||0} pt por 1%</b>`:''}</div>`;
+  const ban=(adm&&d.locked)?`<div class="banner">🔒 Os barbeiros NÃO estão vendo este ranking agora. Só você vê.</div>`:'';
+  const win=(vm!==curKey()&&list[0]&&list[0].p>0&&k==='total')?`<div class="banner">🎉 Destaque de ${esc(mlabel(vm))}: <b>${esc(list[0].s.name)}</b>!</div>`:'';
+  el.innerHTML=(adm&&k==='total'?relCard():'')+ban+win+`<div class="podium">${pod}</div>${rows?`<div class="h2">Classificação geral</div><input id="flt" placeholder="🔎 Filtrar barbeiro" value="${esc(fltText)}" style="margin-bottom:6px"><div id="rows">${rows}</div>`:''}${extra}`;
+  if(adm&&k==='total')bindRel(el);
+  const fl=el.querySelector('#flt');
+  if(fl){const ap=()=>{const q=fl.value.trim().toLowerCase();fltText=fl.value;el.querySelectorAll('#rows .row').forEach(r=>{r.style.display=(!q||(r.dataset.nm||'').includes(q))?'':'none'})};fl.oninput=ap;ap()}
+}
+function renderSplash(L,demo){
+  const cols=['#e8c85a','#c9a227','#1b1b1b','#ffffff','#a9b0b7','#e0245e'];
+  let cf='';for(let i=0;i<22;i++)cf+=`<span class="cf" style="left:${(i*47)%100}%;background:${cols[i%cols.length]};animation-delay:${(i%7)*.55}s;animation-duration:${3.6+(i%5)*.5}s"></span>`;
+  const b=barbers.find(x=>x.id===L.bid);const ph=b&&b.photo;
+  app.innerHTML=header()+`<div class="splash">${cf}${crownSvg()}
+   <div class="ph">${ph?`<img src="${esc(ph)}" alt="">`:esc((L.name||'?').trim().charAt(0).toUpperCase())}</div>
+   <div class="pk">PARABÉNS!</div><div class="pn">${esc(L.name)}</div>
+   <div class="ps">Barbeiro destaque de ${esc(mlabel(L.m))}</div><div class="pp">🏆 ${F1(L.pts)} pontos</div>
+   <div class="pm">Parabéns pelo desempenho, dedicação e talento! Você fez a Alta Performance Gold Barber brilhar este mês. 👏✨</div>
+   <button class="btn gold" id="spb">${demo?'Voltar':'Ver o ranking'}</button></div>`;
+  on(app,'spb',()=>{if(demo)demoM=null;else splashSeen=true;render()});
+}
+
+/* ---------- barbeiro (B): lançar ---------- */
+function kindName(x){
+  const pre=x.adj?'Ajuste do ADM · ':'';
+  if(x.kind==='e')return pre+svName(x.service_id);
+  return pre+({s:'Assinatura vendida',p:'Produto vendido',r:'Reel postado'}[x.kind]||'Lançamento');
+}
+function logList(items,canDel,after){
+  if(!items.length)return '<div class="card note">Nenhum lançamento ainda.</div>';
+  return '<div class="card" style="padding:4px 14px">'+items.map(x=>`<div class="logrow"><div>${esc(kindName(x))} ${x.kind==='p'?'— '+brl(x.qty):'× '+x.qty}<small>${fmtDT(x.created_at)}</small></div>${canDel&&(isA()||(!x.adj&&x.month===curKey()))?`<button class="iconbtn" data-del="${esc(x.id)}" aria-label="Apagar">✕</button>`:''}</div>`).join('')+'</div>';
+}
+function bindDel(el,after){
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('Apagar este lançamento?'))return;
+    const{error}=await sb.from('entries').delete().eq('id',b.dataset.del);
+    if(error)return fail(error);await after();
+  });
+}
+function renderLaunch(el){
+  const mb=myBarber()||(preview?{id:'preview'}:null);
+  if(!mb){
+    const free=barbers.filter(b=>!b.user_id);
+    el.innerHTML=`<div class="card"><b>Quem é você?</b><p class="note">${free.length?'Toque no seu nome para vincular a sua conta:':'Seu nome ainda não foi cadastrado. Peça ao administrador para adicionar você em Barbeiros e depois aprove o vínculo.'}</p>
+     ${free.map(b=>`<button class="btn ghost" data-c="${esc(b.id)}">Sou o ${esc(b.name)}</button>`).join('')}</div>`;
+    el.querySelectorAll('[data-c]').forEach(b=>b.onclick=async()=>{
+      const{error}=await sb.rpc('claim_barber',{p_id:b.dataset.c});if(error)return fail(error);
+      await loadCore();await loadMine();render();toast('Pronto! ✅');
+    });
+    return;
+  }
+  if(!form.s||!services.find(v=>v.id===form.s))form.s=(services[0]||{}).id||'';
+  const kinds=[['e','✂️ Serviço extra'],['s','💳 Assinatura'],['p','🧴 Produto (R$)'],['r','📸 Reel']];
+  el.innerHTML=`<div class="card"><b>O que você fez?</b>
+   <div class="seg">${kinds.map(([k,l])=>`<button data-k="${k}" class="${form.k===k?'on':''}">${l}</button>`).join('')}</div>
+   ${form.k==='e'?`<label for="fs">Qual serviço?</label><select id="fs">${services.map(s=>`<option value="${s.id}" ${s.id===form.s?'selected':''}>${esc(s.name)} — ${num(s.pts)} pts</option>`).join('')}</select>`:''}
+   <label for="fq">${form.k==='p'?'Valor vendido (R$)':'Quantidade'}</label><input id="fq" type="number" inputmode="numeric" min="1" max="${form.k==='p'?20000:50}" value="${form.q}">
+   <button class="btn gold" id="fsend">Enviar lançamento</button></div>
+   <div class="h2">Últimos lançamentos</div><div id="recent">${logList(myEntries.slice(0,8),true)}</div>`;
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{form.k=b.dataset.k;render()});
+  const fs=el.querySelector('#fs');if(fs)fs.onchange=()=>{form.s=fs.value};
+  el.querySelector('#fq').oninput=e=>{form.q=Math.max(1,Math.min(form.k==='p'?20000:50,num(e.target.value)||1))};
+  bindDel(el.querySelector('#recent'),async()=>{await loadMine();render()});
+  on(el,'fsend',async()=>{
+    if(preview){toast('Prévia: não envia de verdade');return}
+    const q=Math.max(1,Math.min(form.k==='p'?20000:50,num(el.querySelector('#fq').value)));
+    if(form.k==='e'&&!form.s){toast('Escolha o serviço');return}
+    if((form.k==='p'?q>=1000:q>=10)&&!confirm('Enviar '+(form.k==='p'?brl(q):'quantidade '+q)+'? Confirme se está certo.'))return;
+    const row={barber_id:mb.id,kind:form.k,qty:q};if(form.k==='e')row.service_id=form.s;
+    const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
+    form.q=1;await loadMine();render();toast('Lançado! ✅');
+  });
+}
+function renderMine(el){
+  const cur=myEntries.filter(x=>x.month===curKey());
+  const sum=k=>Math.max(0,cur.filter(x=>x.kind===k).reduce((a,x)=>a+x.qty,0));
+  el.innerHTML=`<div class="card"><b>Seu mês até agora</b><div class="g2" style="margin-top:10px">
+   <div class="note">Serviços extras<br><b style="font-size:20px;color:var(--ink)">${sum('e')}</b></div><div class="note">Assinaturas<br><b style="font-size:20px;color:var(--ink)">${sum('s')}</b></div>
+   <div class="note">Produtos vendidos<br><b style="font-size:20px;color:var(--ink)">${brl(sum('p'))}</b></div><div class="note">Reels<br><b style="font-size:20px;color:var(--ink)">${sum('r')}</b></div></div></div>
+   <div class="h2">Todos os lançamentos</div><div id="all">${logList(myEntries,true)}</div>`;
+  bindDel(el.querySelector('#all'),async()=>{await loadMine();render()});
+}
+
+/* ---------- administrativo (A) ---------- */
+function qtyOf(bid,k,sid){
+  return Math.max(0,adminQ.filter(r=>r.b===bid&&r.k===k&&(k!=='e'||r.s===sid)).reduce((a,r)=>a+Number(r.q),0));
+}
+function pickPhoto(id){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=()=>{
+    const f=inp.files&&inp.files[0];if(!f)return;const fr=new FileReader();
+    fr.onload=()=>{const img=new Image();
+      img.onload=async()=>{const S=360,c=document.createElement('canvas');c.width=c.height=S;const m=Math.min(img.width,img.height);
+        c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);
+        const{error}=await sb.from('barbers').update({photo:c.toDataURL('image/jpeg',0.82)}).eq('id',id);
+        if(error)return fail(error);await loadCore();render();toast('Foto salva ✅')};
+      img.onerror=()=>toast('Não consegui ler essa foto');img.src=fr.result};
+    fr.readAsDataURL(f);
+  };
+  inp.click();
+}
+function renderBarbers(el){
+  const ms=months.includes(evM)?months:[evM,...months];
+  const st=ranks[curKey()]?stats(curKey()):[];
+  const addBox=`<div class="card"><b>Adicionar barbeiro</b><p class="note">Cadastre pelo nome. Depois é só abrir o barbeiro abaixo e lançar as quantidades dele. Quando ele criar a conta, você vincula em 👤 Usuários.</p>
+   <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px"><input id="nb" maxlength="30" placeholder="Nome do barbeiro"><button class="btn small gold" id="nbb">Adicionar</button></div></div>
+   <div class="card"><b>📊 Avaliação de fim de mês</b><p class="note">Pódium (% de assinantes) e Taxa de retorno: só você preenche, no último dia do mês.</p>
+   <label for="evm">Mês da avaliação</label><select id="evm">${ms.map(k=>`<option value="${k}" ${k===evM?'selected':''}>${mlabel(k)}</option>`).join('')}</select></div>`;
+  const list=barbers.map(b=>{
+    const s=st.find(x=>x.id===b.id);const ev=evalsM.find(x=>x.barber_id===b.id)||{pod:0,ret:0};
+    const cnt=(label,attr,val,pt)=>`<div class="cnt" style="display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>${label} <small style="color:var(--mute)">(${typeof pt==='number'?pt+' pts':pt})</small></span><input type="number" inputmode="numeric" min="0" data-adj="${esc(b.id)}|${attr}" value="${val}"></div>`;
+    return `<details data-b="${esc(b.id)}"><summary>${esc(b.name)} <small>${s?F1(s.tp):0} pts no mês</small></summary><div class="dbody">
+     <div style="display:flex;align-items:center;gap:12px;margin-top:12px"><div class="avatar">${b.photo?`<img src="${esc(b.photo)}" alt="" style="width:100%;height:100%;object-fit:cover">`:esc(b.name.charAt(0).toUpperCase())}</div><button class="btn small ghost" data-ph="${esc(b.id)}">📷 ${b.photo?'Trocar foto':'Adicionar foto'}</button></div>
+     <label>Nome</label><input data-rn="${esc(b.id)}" value="${esc(b.name)}">
+     <div class="h2">Avaliação de ${esc(mlabel(evM))} (%)</div>
+     <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🏅 Pódium — % de assinantes</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|pod" value="${Number(ev.pod)||0}"></div>
+     <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🔁 Taxa de retorno — %</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|ret" value="${Number(ev.ret)||0}"></div>
+     <div class="h2">Quantidades de ${esc(mlabel(curKey()))} (você edita aqui)</div>
+     ${services.map(sv=>cnt(esc(sv.name),'e|'+sv.id,qtyOf(b.id,'e',sv.id),num(sv.pts))).join('')}
+     ${cnt('Assinaturas vendidas','s|',qtyOf(b.id,'s'),num(cfg.sub))}${cnt('Produtos vendidos em R$','p|',qtyOf(b.id,'p'),'valor em reais')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),num(cfg.reel))}
+     <p class="note">Mudou o número? O app registra a diferença como "Ajuste do ADM" no histórico.</p>
+     <div class="h2">Histórico (apague se algo estiver errado)</div><div data-hist="${esc(b.id)}" class="note">Abra para carregar…</div>
+     <button class="btn small red" style="margin-top:14px" data-rm="${esc(b.id)}">Remover barbeiro</button></div></details>`;
+  }).join('');
+  el.innerHTML=addBox+(barbers.length?list:'<div class="card note">Nenhum barbeiro ainda. Adicione o primeiro acima.</div>');
+  on(el,'nbb',async()=>{const inp=el.querySelector('#nb');const n=inp.value.trim();if(!n){toast('Digite o nome');return}
+    const{error}=await sb.from('barbers').insert({name:n});if(error)return fail(error);await loadCore();render();toast('Barbeiro adicionado ✅')});
+  el.querySelector('#evm').onchange=async e=>{evM=e.target.value;await loadAdmin();render()};
+  el.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>pickPhoto(b.dataset.ph));
+  el.querySelectorAll('[data-rn]').forEach(i=>i.onchange=async()=>{const n=i.value.trim();if(!n)return;const{error}=await sb.from('barbers').update({name:n}).eq('id',i.dataset.rn);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
+  el.querySelectorAll('[data-ev]').forEach(i=>i.onchange=async()=>{
+    const[id]=i.dataset.ev.split('|');
+    const get=f=>Math.min(100,dec(el.querySelector(`[data-ev="${id}|${f}"]`).value));
+    const{error}=await sb.from('evals').upsert({barber_id:id,month:evM,pod:get('pod'),ret:get('ret')});
+    if(error)return fail(error);await loadAdmin();toast('Salvo ✅');
+  });
+  el.querySelectorAll('[data-adj]').forEach(i=>i.onchange=async()=>{
+    const[id,k,sid]=i.dataset.adj.split('|');
+    const delta=num(i.value)-qtyOf(id,k,sid);if(!delta)return;
+    const row={barber_id:id,month:curKey(),kind:k,qty:delta,adj:true};if(k==='e')row.service_id=sid;
+    const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
+    await loadAdmin();await loadRank(curKey());render();toast('Ajustado ✅');
+  });
+  el.querySelectorAll('details[data-b]').forEach(d=>d.ontoggle=async()=>{
+    if(!d.open)return;const id=d.dataset.b;const box=d.querySelector('[data-hist]');
+    const{data,error}=await sb.from('entries').select('*').eq('barber_id',id).order('created_at',{ascending:false}).limit(60);
+    if(error)return fail(error);box.className='';box.innerHTML=logList(data||[],true);
+    bindDel(box,async()=>{await loadAdmin();await loadRank(curKey());render();toast('Apagado')});
+  });
+  el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{
+    const bb=barbers.find(x=>x.id===b.dataset.rm);
+    if(!confirm('Remover '+bb.name+' e todos os lançamentos dele?'))return;
+    const{error}=await sb.from('barbers').delete().eq('id',bb.id);if(error)return fail(error);await loadCore();await loadAdmin();render();
+  });
+}
+function renderUsers(el){
+  const pend=users.filter(u=>!u.role),act=users.filter(u=>u.role);
+  const free=barbers.filter(b=>!b.user_id);
+  el.innerHTML=`<div class="card"><b>Cadastrar novos usuários</b><p class="note">A pessoa abre o app, toca em <b>Criar conta</b> e aparece aqui como pendente. Você aprova como <b>A</b> (administrativo) ou <b>B</b> (visualização).</p>
+   <div class="note"><b>A — Administrativo:</b> edita tudo e cadastra usuários.<br><b>B — Visualização:</b> vê ranking e filtros e faz os próprios lançamentos.</div></div>
+   <div class="h2">Solicitações pendentes (${pend.length})</div>
+   ${pend.length?pend.map(u=>`<div class="card" style="padding:12px 14px"><b>${esc(u.name||'Sem nome')}</b><div class="note">${esc(u.email||'')}</div>
+     <label>Se for B, qual barbeiro é ele?</label><select data-bs="${esc(u.id)}"><option value="new">Criar barbeiro novo "${esc(u.name||'Sem nome')}"</option>${free.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn small gold" data-ap="${esc(u.id)}|B">Aprovar como B</button><button class="btn small" data-ap="${esc(u.id)}|A">Aprovar como A</button></div></div>`).join(''):'<div class="card note">Nenhuma solicitação.</div>'}
+   <div class="h2">Usuários cadastrados</div>
+   <div class="card" style="padding:4px 14px">${act.map(u=>`<div class="logrow"><div>${esc(u.name||'Sem nome')}${u.id===user.id?' (você)':''}<small>${esc(u.email||'')}${barbers.find(b=>b.user_id===u.id)?' · barbeiro: '+esc(barbers.find(b=>b.user_id===u.id).name):''}</small></div>
+     <div style="display:flex;gap:6px;align-items:center"><select data-rr="${esc(u.id)}" style="width:76px;padding:8px" ${u.id===user.id?'disabled':''}><option value="A" ${u.role==='A'?'selected':''}>A</option><option value="B" ${u.role==='B'?'selected':''}>B</option></select>${u.id===user.id?'':`<button class="iconbtn" data-rd="${esc(u.id)}" aria-label="Remover acesso">✕</button>`}</div></div>`).join('')}</div>`;
+  el.querySelectorAll('[data-ap]').forEach(b=>b.onclick=async()=>{
+    const[id,role]=b.dataset.ap.split('|');const u=users.find(x=>x.id===id);
+    if(role==='B'){
+      const v=el.querySelector(`[data-bs="${id}"]`).value;
+      const r=v==='new'?await sb.from('barbers').insert({name:u.name||'Novo barbeiro',user_id:id}):await sb.from('barbers').update({user_id:id}).eq('id',v);
+      if(r.error)return fail(r.error);
+    }
+    const{error}=await sb.from('profiles').update({role}).eq('id',id);if(error)return fail(error);
+    await loadUsers();await loadCore();render();toast('Usuário aprovado ✅');
+  });
+  el.querySelectorAll('[data-rr]').forEach(s=>s.onchange=async()=>{const{error}=await sb.from('profiles').update({role:s.value}).eq('id',s.dataset.rr);if(error)return fail(error);await loadUsers();render();toast('Perfil alterado ✅')});
+  el.querySelectorAll('[data-rd]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover o acesso desta pessoa?'))return;const{error}=await sb.from('profiles').update({role:null}).eq('id',b.dataset.rd);if(error)return fail(error);await loadUsers();render()});
+}
+let cfgTimer=null;
+function saveCfgSoon(patch){Object.assign(cfg,patch);clearTimeout(cfgTimer);cfgTimer=setTimeout(async()=>{const{error}=await sb.from('config').update(patch).eq('id',1);if(error)fail(error)},600)}
+function renderCfg(el){
+  const svc=services.map(s=>`<div class="g3"><input data-sn="${esc(s.id)}" value="${esc(s.name)}" aria-label="Serviço"><input data-sp="${esc(s.id)}" type="number" inputmode="numeric" min="0" value="${num(s.pts)}" aria-label="Pontos"><button class="iconbtn" data-sd="${esc(s.id)}" aria-label="Remover">✕</button></div>`).join('');
+  el.innerHTML=`
+  <div class="h2">Última semana (surpresa)</div><div class="card">
+   <label>Modo do ranking para os barbeiros</label>
+   <select id="cm"><option value="auto" ${cfg.mode==='auto'?'selected':''}>Automático — esconde na última semana do mês</option><option value="locked" ${cfg.mode==='locked'?'selected':''}>Esconder agora</option><option value="open" ${cfg.mode==='open'?'selected':''}>Mostrar sempre (revelar)</option></select>
+   <label>Mensagens engraçadas (uma por linha; uma por dia é sorteada)</label><textarea id="cmsg">${esc((cfg.messages||[]).join('\n'))}</textarea>
+   <p class="note">O mês que passou também fica escondido até você liberar o destaque, na aba 🏆 Destaque do Mês.</p></div>
+  <div class="h2">Pontos por venda</div><div class="card"><div class="g2">
+   <div><label>Assinatura</label><input id="cs" type="number" inputmode="numeric" min="0" value="${num(cfg.sub)}"></div>
+   <div></div></div>
+   <label>Produtos: pontos por faixa de vendas no mês (vale a maior faixa alcançada)</label>
+   <div id="tiers">${tiers().map((t,i)=>`<div class="g3" style="grid-template-columns:1fr 1fr 40px"><input data-tm="${i}" type="number" inputmode="numeric" min="1" value="${t.min}" aria-label="A partir de R$"><input data-tp="${i}" type="number" inputmode="numeric" min="0" value="${t.pts}" aria-label="Pontos"><button class="iconbtn" data-td="${i}" aria-label="Remover faixa">✕</button></div>`).join('')}</div>
+   <p class="note">Esquerda: a partir de quantos reais. Direita: quantos pontos. Ex.: 300 → 80, 600 → 170, 1200 → 250.</p>
+   <button class="btn small ghost" id="addT">+ Adicionar faixa</button>
+   <label>Reel postado (Metagram)</label><input id="cr" type="number" inputmode="numeric" min="0" value="${num(cfg.reel)}">
+   <div class="g2"><div><label>Pts por 1% de Pódium</label><input id="cpd" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.pod_pts)||0}"></div>
+   <div><label>Pts por 1% de Retorno</label><input id="crt" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.ret_pts)||0}"></div></div>
+   <p class="note">Deixe 0 se Pódium e Taxa de retorno devem ter só o ranking próprio, sem somar no Destaque do Mês.</p></div>
+  <div class="h2">Serviços extras e pontos</div><div class="card">${svc}<button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
+  <p class="note">Tudo aqui salva sozinho.</p>`;
+  el.querySelector('#cm').onchange=e=>saveCfgSoon({mode:e.target.value});
+  el.querySelector('#cmsg').oninput=e=>saveCfgSoon({messages:e.target.value.split('\n').map(x=>x.trim()).filter(Boolean)});
+  el.querySelector('#cs').oninput=e=>saveCfgSoon({sub:num(e.target.value)});
+  const readTiers=()=>[...el.querySelectorAll('[data-tm]')].map((m,i)=>({min:num(m.value),pts:num(el.querySelector(`[data-tp="${i}"]`).value)}));
+  el.querySelectorAll('[data-tm],[data-tp]').forEach(i=>i.oninput=()=>saveCfgSoon({prod_tiers:readTiers()}));
+  el.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>{const t=readTiers();t.splice(+b.dataset.td,1);saveCfgSoon({prod_tiers:t});render()});
+  on(el,'addT',()=>{const t=readTiers();t.push({min:(t.length?t[t.length-1].min:0)+300,pts:0});saveCfgSoon({prod_tiers:t});render()});
+  el.querySelector('#cr').oninput=e=>saveCfgSoon({reel:num(e.target.value)});
+  el.querySelector('#cpd').oninput=e=>saveCfgSoon({pod_pts:dec(e.target.value)});
+  el.querySelector('#crt').oninput=e=>saveCfgSoon({ret_pts:dec(e.target.value)});
+  el.querySelectorAll('[data-sn]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({name:i.value.trim()||'Serviço'}).eq('id',i.dataset.sn);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
+  el.querySelectorAll('[data-sp]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({pts:num(i.value)}).eq('id',i.dataset.sp);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
+  el.querySelectorAll('[data-sd]').forEach(i=>i.onclick=async()=>{if(!confirm('Remover este serviço? Lançamentos antigos dele deixam de contar pontos.'))return;const{error}=await sb.from('services').delete().eq('id',i.dataset.sd);if(error)return fail(error);await loadCore();render()});
+  on(el,'addS',async()=>{const{error}=await sb.from('services').insert({name:'Novo serviço',pts:10});if(error)return fail(error);await loadCore();render()});
+}
+
+/* ---------- início ---------- */
+async function boot(){
+  if(SUPABASE_KEY.startsWith('COLE_AQUI')){
+    app.innerHTML=header()+`<div class="card"><b>Falta uma etapa</b><p class="note">Abra o arquivo e troque <b>sb_publishable_Q4tdbxxJbwqZVbXUg4lrwQ_jrzBBq0L</b> pela chave "anon / publishable" do seu projeto Supabase (Project Settings → API).</p></div>`;return;
+  }
+  if(!window.supabase){app.innerHTML=header()+'<div class="card note">Não foi possível carregar o Supabase. Verifique a internet.</div>';return}
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const{data:{session}}=await sb.auth.getSession();
+  user=session?session.user:null;
+  sb.auth.onAuthStateChange((ev,s)=>{
+    const u=s?s.user:null;
+    if((u&&u.id)!==(user&&user.id)){user=u;if(u)afterLogin();else{prof=null;render()}}
+  });
+  if(user)await afterLogin();else renderAuth();
+  setInterval(async()=>{
+    const a=document.activeElement;
+    if(document.hidden||!user||!prof||!prof.role||(a&&app.contains(a)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))return;
+    try{
+      if(tab in CATS){await loadCore();await loadRank(vm);render()}
+      else if(tab==='users'&&isA()){await loadUsers();render()}
+    }catch(e){}
+  },45000);
+}
+boot();
+
+</script>
+</body>
+</html>
