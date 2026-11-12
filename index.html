@@ -123,6 +123,7 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 const DEFMSG=['🤫 Boca de siri! O destaque do mês está no forno e ninguém pode espiar.','🕵️ Quem será o barbeiro destaque? Só a tesoura sabe… e ela não fala.','🥁 Suspense total! O ranking foi trancado no cofre da Gold Barber.'];
 
 let sb=null,user=null,prof=null,cfg=null,services=[],barbers=[],months=[],ranks={},adminQ=[],evalsM=[],users=[],myEntries=[];
+let lb='',adminRecent=[];
 let tab=null,vm=null,form={k:'e',s:'',q:1},preview=false,pvForce=null,splashSeen=false,demoM=null,evM=null,fltText='',authMode='in',hist={};
 
 /* ---------- datas ---------- */
@@ -204,6 +205,7 @@ async function loadRank(m){const{data,error}=await sb.rpc('get_ranking',{p_month
 async function loadMine(){const mb=myBarber();if(!mb){myEntries=[];return}const{data}=await sb.from('entries').select('*').eq('barber_id',mb.id).order('created_at',{ascending:false}).limit(200);myEntries=data||[]}
 let myPanel=null;
 async function loadMyPanel(){if(!myBarber()){myPanel=null;return}const{data,error}=await sb.rpc('get_my_panel',{p_month:curKey()});if(error){fail(error);return}myPanel=data}
+async function loadAdminRecent(){if(!lb&&barbers[0])lb=barbers[0].id;if(!lb){adminRecent=[];return}const{data}=await sb.from('entries').select('*').eq('barber_id',lb).order('created_at',{ascending:false}).limit(12);adminRecent=data||[]}
 async function loadAdmin(){
   if(!evM)evM=curKey();
   const [q,e]=await Promise.all([sb.rpc('admin_qty',{p_month:curKey()}),sb.from('evals').select('*').eq('month',evM)]);
@@ -229,7 +231,8 @@ async function openTab(t){
   tab=t;
   try{
     if(t in CATS)await loadRank(vm);
-    if(t==='launch'||t==='mine')await loadMine();
+    if((t==='launch'||t==='mine')&&!isA())await loadMine();
+    if(t==='launch'&&isA())await loadAdminRecent();
     if(t==='mine')await loadMyPanel();
     if(t==='barbers')await loadAdmin();
     if(t==='users')await loadUsers();
@@ -282,11 +285,12 @@ function render(){
   const adm=isA()&&!preview;
   if(demoM&&isA()&&!preview){const L=leader(demoM);if(L){renderSplash({m:demoM,bid:L.id,name:L.name,pts:L.dp},true);return}demoM=null}
   if(cfg.splash&&cfg.splash.bid&&!splashSeen&&(!isA()||preview)){renderSplash(cfg.splash,false);return}
-  const barberTabs=['launch','mine'],adminTabs=['barbers','users','cfg'];
+  const barberTabs=['mine'],adminTabs=['barbers','users','cfg'];
   if(!tab||(adm&&barberTabs.includes(tab))||(!adm&&(adminTabs.includes(tab)||tab in CATS)))tab=adm?'total':'launch';
   if(!vm)vm=defaultView();
   let t='';
   if(!adm)t+=`<button class="tab ${tab==='launch'?'on':''}" data-t="launch">➕ Lançar</button>`;
+  if(adm)t+=`<button class="tab adm ${tab==='launch'?'on':''}" data-t="launch">➕ Lançar</button>`;
   if(adm)Object.entries(CATS).forEach(([k,c])=>t+=`<button class="tab ${tab===k?'on':''}" data-t="${k}">${c.label}</button>`);
   if(!adm)t+=`<button class="tab ${tab==='mine'?'on':''}" data-t="mine">📊 Meu painel</button>`;
   if(adm)t+=`<button class="tab adm ${tab==='barbers'?'on':''}" data-t="barbers">👥 Barbeiros</button><button class="tab adm ${tab==='users'?'on':''}" data-t="users">👤 Usuários</button><button class="tab adm ${tab==='cfg'?'on':''}" data-t="cfg">⚙️ Configurar</button>`;
@@ -412,7 +416,11 @@ function bindDel(el,after){
   });
 }
 function renderLaunch(el){
-  const mb=myBarber()||(preview?{id:'preview'}:null);
+  const A=isA()&&!preview;
+  const mb=A?(barbers.find(b=>b.id===lb)||barbers[0]||null):(myBarber()||(preview?{id:'preview'}:null));
+  if(A&&!mb){el.innerHTML='<div class="card note">Cadastre um barbeiro em 👥 Barbeiros primeiro.</div>';return}
+  if(A)lb=mb.id;
+  const ents=A?adminRecent:myEntries;
   if(!mb){
     const free=barbers.filter(b=>!b.user_id);
     el.innerHTML=`<div class="card"><b>Quem é você?</b><p class="note">${free.length?'Toque no seu nome para vincular a sua conta:':'Seu nome ainda não foi cadastrado. Peça ao administrador para adicionar você em Barbeiros e depois aprove o vínculo.'}</p>
@@ -428,20 +436,22 @@ function renderLaunch(el){
   const hasVal=form.k==='e'||form.k==='s';
   const defV=form.k==='e'?(Number((services.find(v=>v.id===form.s)||{}).pts)||0):form.k==='s'?(Number(cfg.sub)||0):0;
   const unitV=(form.v!=null)?form.v:defV;
-  el.innerHTML=`<div class="card"><b>O que você fez?</b>
+  el.innerHTML=`<div class="card">${A?`<b>Lançar para qual barbeiro?</b><select id="fb" style="margin-bottom:12px">${barbers.map(b=>`<option value="${esc(b.id)}" ${b.id===mb.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select>`:''}<b>${A?'O que ele fez?':'O que você fez?'}</b>
    <div class="seg">${kinds.map(([k,l])=>`<button data-k="${k}" class="${form.k===k?'on':''}">${l}</button>`).join('')}</div>
    ${form.k==='e'?`<label for="fs">Qual serviço?</label><select id="fs">${services.map(s=>`<option value="${s.id}" ${s.id===form.s?'selected':''}>${esc(s.name)} — ${brl(s.pts)}</option>`).join('')}</select>`:''}
    <label for="fq">${form.k==='p'?'Valor vendido (R$)':'Quantidade'}</label><input id="fq" type="number" inputmode="numeric" min="1" max="${form.k==='p'?20000:50}" value="${form.q}">
    ${hasVal?`<label for="fv">Valor de cada um (R$) — já vem preenchido, você pode editar</label><input id="fv" type="number" inputmode="decimal" step="0.01" min="0" value="${unitV}"><p class="note" id="ftot" style="margin:8px 0 0">Total do lançamento: <b>${brl(unitV*form.q)}</b></p>`:''}
    <button class="btn gold" id="fsend">Enviar lançamento</button></div>
-   <div class="h2">Últimos lançamentos</div><div id="recent">${logList(myEntries.slice(0,8),true)}</div>`;
+   <div class="h2">Últimos lançamentos</div><div id="recent">${logList(ents.slice(0,8),true)}</div>`;
   const maxQ=()=>form.k==='p'?20000:50;
   const updTot=()=>{const t=el.querySelector('#ftot');if(t){const u=(form.v!=null)?form.v:defV;t.innerHTML='Total do lançamento: <b>'+brl(u*form.q)+'</b>'}};
   el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{form.k=b.dataset.k;form.v=null;render()});
   const fs=el.querySelector('#fs');if(fs)fs.onchange=()=>{form.s=fs.value;form.v=null;render()};
   el.querySelector('#fq').oninput=e=>{form.q=Math.max(1,Math.min(maxQ(),num(e.target.value)||1));updTot()};
   const fv=el.querySelector('#fv');if(fv)fv.oninput=e=>{form.v=dec(e.target.value);updTot()};
-  bindDel(el.querySelector('#recent'),async()=>{await loadMine();render()});
+  const refresh=async()=>{if(A){await loadAdminRecent();await loadRank(curKey())}else await loadMine()};
+  const fb=el.querySelector('#fb');if(fb)fb.onchange=async()=>{lb=fb.value;await loadAdminRecent();render()};
+  bindDel(el.querySelector('#recent'),async()=>{await refresh();render()});
   on(el,'fsend',async()=>{
     if(preview){toast('Prévia: não envia de verdade');return}
     const q=Math.max(1,Math.min(maxQ(),num(el.querySelector('#fq').value)));
@@ -451,9 +461,9 @@ function renderLaunch(el){
     if(amount>20000){toast('Valor alto demais. Confira.');return}
     if(hasVal&&unit<=0){toast('Digite o valor');return}
     if((amount>=1000||(!hasVal&&form.k!=='p'&&q>=10))&&!confirm('Enviar '+(hasVal?q+' × '+brl(unit)+' = '+brl(amount):form.k==='p'?brl(q):'quantidade '+q)+'? Confirme se está certo.'))return;
-    const row={barber_id:mb.id,kind:form.k,qty:q,amount};if(form.k==='e')row.service_id=form.s;
+    const row={barber_id:mb.id,kind:form.k,qty:q,amount};if(A)row.adj=true;if(form.k==='e')row.service_id=form.s;
     const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
-    form.q=1;form.v=null;await loadMine();render();toast('Lançado! ✅');
+    form.q=1;form.v=null;await refresh();render();toast(A?'Lançado para '+mb.name+' ✅':'Lançado! ✅');
   });
 }
 function renderMine(el){
