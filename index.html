@@ -218,7 +218,12 @@ async function afterLogin(){
     if(!prof||!prof.role){render();return}
     await loadCore();vm=defaultView();if(isA())await loadRank(vm);await loadMine();
     tab=isA()?'total':'launch';render();
-  }catch(e){fail(e);render()}
+  }catch(e){
+    console.error(e);
+    app.innerHTML=header()+`<div class="card"><b>Não consegui carregar</b><p class="note">Erro: ${esc((e&&(e.message||e.details||e.code))||String(e))}</p>
+     <button class="btn gold" id="rt">Tentar de novo</button><button class="btn ghost" id="lo2">Sair e entrar de novo</button></div>`;
+    on(app,'rt',afterLogin);on(app,'lo2',logout);
+  }
 }
 async function openTab(t){
   tab=t;
