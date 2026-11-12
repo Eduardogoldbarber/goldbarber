@@ -145,12 +145,12 @@ function stats(m){
   const d=ranks[m];if(!d||!d.rows)return [];
   const arr=d.rows.map(r=>{
     const s={id:r.id,name:r.name||'Sem nome',uid:r.uid,eq:num(r.eq),ep:Number(r.ep)||0,sq:num(r.sq),sp:Number(r.sp)||0,pq:Number(r.pq)||0,rq:num(r.rq),pod:Number(r.pod)||0,ret:Number(r.ret)||0};
-    s.tp=Math.round((s.ep+s.sp+s.pq)*100)/100;
+    s.tp=Math.round((s.ep+s.pq)*100)/100;
     return s;
   });
   placeAll(arr);return arr;
 }
-const PLC=[['extras','Serviços Extras',s=>s.ep],['subs','Assinaturas',s=>s.sp],['prods','Produtos',s=>s.pq],['reels','Metagram',s=>s.rq],['pod','Pódium',s=>s.pod],['ret','Taxa de Retorno',s=>s.ret]];
+const PLC=[['extras','Serviços Extras',s=>s.ep],['subs','Assinaturas',s=>s.sq],['prods','Produtos',s=>s.pq],['reels','Metagram',s=>s.rq],['pod','Pódium',s=>s.pod],['ret','Taxa de Retorno',s=>s.ret]];
 function placeOf(arr,f,s){const v=f(s);if(!(v>0))return 0;return 1+arr.filter(o=>f(o)>v).length}
 function placeAll(arr){
   arr.forEach(s=>{s.pl={};s.dp=0;PLC.forEach(([k,,f])=>{const pl=placeOf(arr,f,s);s.pl[k]=pl;s.dp+=pl===1?2:pl===2?1:0})});
@@ -159,7 +159,7 @@ const F1=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const CATS={
   total:{label:'🏆 Destaque do Mês',pts:s=>s.dp,det:s=>brl(s.tp)+' no total',unit:'pts'},
   extras:{label:'✂️ Serviços Extras',pts:s=>s.ep,det:s=>s.eq+' serviços',money:true},
-  subs:{label:'💳 Assinaturas',pts:s=>s.sp,det:s=>s.sq+' vendas',money:true},
+  subs:{label:'💳 Assinaturas',pts:s=>s.sq,det:s=>'assinaturas vendidas',unit:'vendas'},
   prods:{label:'🧴 Produtos',pts:s=>s.pq,det:s=>'em vendas',money:true},
   reels:{label:'📸 Metagram',pts:s=>s.rq,det:s=>'reels postados',unit:'reels'},
   pod:{label:'🏅 Pódium',pts:s=>s.pod,det:s=>'de assinantes',unit:'%',fmt:F1},
@@ -368,7 +368,7 @@ function renderRank(el,k,adm){
     const st=stats(vm);
     const nm=(f,pl)=>{const n=st.filter(x=>placeOf(st,f,x)===pl).map(x=>esc(x.name));return n.length?n.join(', '):'—'};
     extra=`<div class="h2">Quem está em 1º e 2º em cada ranking</div><div class="card" style="padding:6px 14px">`+PLC.map(([key,lab,f])=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);font-size:14px"><b>${lab}</b><br>🥇 ${nm(f,1)} <small>(2 pts)</small><br>🥈 ${nm(f,2)} <small>(1 pt)</small></div>`).join('')+`</div>
-    <div class="h2">Como o destaque é calculado</div><div class="card note">Em cada ranking (Serviços Extras, Assinaturas, Produtos, Metagram, Pódium e Taxa de Retorno): <b>1º lugar ganha 2 pontos</b> e <b>2º lugar ganha 1 ponto</b>. Quem somar mais pontos é o Barbeiro Destaque. Em caso de empate, vence quem fez mais reais no total (serviços + assinaturas + produtos). Quem está com zero num ranking não pontua nele.</div>`;
+    <div class="h2">Como o destaque é calculado</div><div class="card note">Em cada ranking (Serviços Extras, Assinaturas, Produtos, Metagram, Pódium e Taxa de Retorno): <b>1º lugar ganha 2 pontos</b> e <b>2º lugar ganha 1 ponto</b>. Quem somar mais pontos é o Barbeiro Destaque. Em caso de empate, vence quem fez mais reais no total (serviços + produtos). Quem está com zero num ranking não pontua nele.</div>`;
   }
   const ban=(adm&&d.locked)?`<div class="banner">🔒 Os barbeiros NÃO estão vendo este ranking agora. Só você vê.</div>`:'';
   const win=(vm!==curKey()&&list[0]&&list[0].p>0&&k==='total')?`<div class="banner">🎉 Destaque de ${esc(mlabel(vm))}: <b>${esc(list[0].s.name)}</b>!</div>`:'';
@@ -399,7 +399,7 @@ function kindName(x){
 function entryText(x){
   const a=Number(x.amount)||0;
   if(x.kind==='p')return '— '+brl(a||x.qty);
-  if(x.kind==='r')return '× '+x.qty;
+  if(x.kind==='r'||x.kind==='s')return '× '+x.qty;
   if(!x.qty)return '— '+brl(a);
   return '× '+x.qty+' — '+brl(a);
 }
@@ -432,8 +432,8 @@ function renderLaunch(el){
   }
   if(!form.s||!services.find(v=>v.id===form.s))form.s=(services[0]||{}).id||'';
   const kinds=[['e','✂️ Serviço extra'],['s','💳 Assinatura'],['p','🧴 Produto'],['r','📸 Reel']];
-  const hasVal=form.k==='e'||form.k==='s';
-  const defV=form.k==='e'?(Number((services.find(v=>v.id===form.s)||{}).pts)||0):form.k==='s'?(Number(cfg.sub)||0):0;
+  const hasVal=form.k==='e';
+  const defV=form.k==='e'?(Number((services.find(v=>v.id===form.s)||{}).pts)||0):0;
   const unitV=(form.v!=null)?form.v:defV;
   el.innerHTML=`<div class="card">${A?`<b>Lançar para qual barbeiro?</b><select id="fb" style="margin-bottom:12px">${barbers.map(b=>`<option value="${esc(b.id)}" ${b.id===mb.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select>`:''}<b>${A?'O que ele fez?':'O que você fez?'}</b>
    <div class="seg">${kinds.map(([k,l])=>`<button data-k="${k}" class="${form.k===k?'on':''}">${l}</button>`).join('')}</div>
@@ -467,24 +467,24 @@ function renderLaunch(el){
 }
 function renderMine(el){
   const P=myPanel||{},n=k=>Number(P[k])||0;
-  const tot=Math.round((n('ep')+n('sp')+n('pq'))*100)/100;
+  const tot=Math.round((n('ep')+n('pq'))*100)/100;
   const box=(t,v,sm)=>`<div class="note">${t}<br><b style="font-size:20px;color:var(--ink)">${v}</b>${sm?`<br><small>${sm}</small>`:''}</div>`;
   el.innerHTML=`<div class="card"><b>Seu painel de ${esc(mlabel(curKey()))}</b>
    <div class="g2" style="margin-top:12px">
    ${box('✂️ Serviços extras',brl(n('ep')),n('eq')+' serviço'+(n('eq')===1?'':'s'))}
-   ${box('💳 Assinaturas',brl(n('sp')),n('sq')+' venda'+(n('sq')===1?'':'s'))}
+   ${box('💳 Assinaturas',n('sq')+' venda'+(n('sq')===1?'':'s'),'assinaturas vendidas')}
    ${box('🧴 Produtos',brl(n('pq')),'vendido no mês')}
    ${box('📸 Metagram',n('rq')+' reel'+(n('rq')===1?'':'s'),'reels postados')}
    ${box('🏅 Pódium',numFmt(n('pod'))+'%','o ADM atualiza no fim do mês')}
    ${box('🔁 Taxa de retorno',numFmt(n('ret'))+'%','o ADM atualiza no fim do mês')}
-   </div><p class="note" style="margin-top:12px">Total em reais (serviços + assinaturas + produtos): <b>${brl(tot)}</b></p></div>
+   </div><p class="note" style="margin-top:12px">Total em reais (serviços + produtos): <b>${brl(tot)}</b></p></div>
    <div class="h2">Meus lançamentos</div><div id="all">${logList(myEntries,true)}</div>`;
   bindDel(el.querySelector('#all'),async()=>{await loadMine();await loadMyPanel();render()});
 }
 
 /* ---------- administrativo (A) ---------- */
 function qtyOf(bid,k,sid){
-  const f=k==='r'?(r=>Number(r.q)||0):(r=>Number(r.a)||0);
+  const f=(k==='r'||k==='s')?(r=>Number(r.q)||0):(r=>Number(r.a)||0);
   return Math.max(0,Math.round(adminQ.filter(r=>r.b===bid&&r.k===k&&(k!=='e'||r.s===sid)).reduce((a,r)=>a+f(r),0)*100)/100);
 }
 function pickPhoto(id){
@@ -519,7 +519,7 @@ function renderBarbers(el){
      <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🔁 Taxa de retorno — %</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|ret" value="${Number(ev.ret)||0}"></div>
      <div class="h2">Valores de ${esc(mlabel(curKey()))} em R$ (você edita aqui)</div>
      ${services.map(sv=>cnt(esc(sv.name),'e|'+sv.id,qtyOf(b.id,'e',sv.id),'R$ vendido')).join('')}
-     ${cnt('Assinaturas','s|',qtyOf(b.id,'s'),'R$ vendido')}${cnt('Produtos','p|',qtyOf(b.id,'p'),'R$ vendido')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),'quantidade','1')}
+     ${cnt('Assinaturas','s|',qtyOf(b.id,'s'),'quantidade','1')}${cnt('Produtos','p|',qtyOf(b.id,'p'),'R$ vendido')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),'quantidade','1')}
      <p class="note">Mudou o valor? O app registra a diferença como "Ajuste do ADM" no histórico.</p>
      <div class="h2">Histórico (apague se algo estiver errado)</div><div data-hist="${esc(b.id)}" class="note">Abra para carregar…</div>
      <button class="btn small red" style="margin-top:14px" data-rm="${esc(b.id)}">Remover barbeiro</button></div></details>`;
@@ -538,9 +538,9 @@ function renderBarbers(el){
   });
   el.querySelectorAll('[data-adj]').forEach(i=>i.onchange=async()=>{
     const[id,k,sid]=i.dataset.adj.split('|');
-    const nv=k==='r'?Math.round(dec(i.value)):dec(i.value);
+    const nv=(k==='r'||k==='s')?Math.round(dec(i.value)):dec(i.value);
     const delta=Math.round((nv-qtyOf(id,k,sid))*100)/100;if(!delta)return;
-    const row={barber_id:id,month:curKey(),kind:k,qty:k==='r'?delta:0,amount:k==='r'?0:delta,adj:true};if(k==='e')row.service_id=sid;
+    const row={barber_id:id,month:curKey(),kind:k,qty:(k==='r'||k==='s')?delta:0,amount:(k==='r'||k==='s')?0:delta,adj:true};if(k==='e')row.service_id=sid;
     const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
     await loadAdmin();await loadRank(curKey());render();toast('Ajustado ✅');
   });
@@ -591,15 +591,10 @@ function renderCfg(el){
    <select id="cm"><option value="auto" ${cfg.mode==='auto'?'selected':''}>Automático — esconde na última semana do mês</option><option value="locked" ${cfg.mode==='locked'?'selected':''}>Esconder agora</option><option value="open" ${cfg.mode==='open'?'selected':''}>Mostrar sempre (revelar)</option></select>
    <label>Mensagens engraçadas (uma por linha; uma por dia é sorteada)</label><textarea id="cmsg">${esc((cfg.messages||[]).join('\n'))}</textarea>
    <p class="note">O mês que passou também fica escondido até você liberar o destaque, na aba 🏆 Destaque do Mês.</p></div>
-  <div class="h2">Valores (R$)</div><div class="card"><div class="g2">
-   <div><label>Assinatura (R$) — valor padrão no lançamento</label><input id="cs" type="number" inputmode="decimal" step="0.01" min="0" value="${Number(cfg.sub)||0}"></div>
-   <div></div></div>
-   <p class="note">Aqui é só o valor que já vem preenchido no lançamento. Não vale ponto: o Destaque do Mês é por colocação (1º = 2 pts, 2º = 1 pt).</p></div>
-  <div class="h2">Serviços extras e valores (R$)</div><div class="card">${svc}<p class="note">Esse valor já vem preenchido quando o barbeiro lança, e ele pode editar na hora. Mudar o valor aqui não altera lançamentos antigos.</p><button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
+  <div class="h2">Serviços extras e valores (R$)</div><div class="card">${svc}<p class="note">Esse valor já vem preenchido quando o barbeiro lança, e ele pode editar na hora. Não vale ponto: o Destaque do Mês é por colocação (1º = 2 pts, 2º = 1 pt). Assinatura e reel contam só a quantidade. Mudar o valor aqui não altera lançamentos antigos.</p><button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
   <p class="note">Tudo aqui salva sozinho.</p>`;
   el.querySelector('#cm').onchange=e=>saveCfgSoon({mode:e.target.value});
   el.querySelector('#cmsg').oninput=e=>saveCfgSoon({messages:e.target.value.split('\n').map(x=>x.trim()).filter(Boolean)});
-  el.querySelector('#cs').oninput=e=>saveCfgSoon({sub:dec(e.target.value)});
   el.querySelectorAll('[data-sn]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({name:i.value.trim()||'Serviço'}).eq('id',i.dataset.sn);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
   el.querySelectorAll('[data-sp]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({pts:dec(i.value)}).eq('id',i.dataset.sp);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
   el.querySelectorAll('[data-sd]').forEach(i=>i.onclick=async()=>{if(!confirm('Remover este serviço? Lançamentos antigos dele deixam de contar pontos.'))return;const{error}=await sb.from('services').delete().eq('id',i.dataset.sd);if(error)return fail(error);await loadCore();render()});
