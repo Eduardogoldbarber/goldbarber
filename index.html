@@ -143,19 +143,19 @@ const svName=id=>{const s=services.find(v=>v.id===id);return s?s.name:'Serviço 
 function stats(m){
   const d=ranks[m];if(!d||!d.rows)return [];
   return d.rows.map(r=>{
-    const s={id:r.id,name:r.name||'Sem nome',uid:r.uid,eq:num(r.eq),ep:num(r.ep),sq:num(r.sq),pq:num(r.pq),rq:num(r.rq),pod:Number(r.pod)||0,ret:Number(r.ret)||0};
-    s.sp=s.sq*num(cfg.sub);s.pp=tierPts(s.pq);s.rp=s.rq*num(cfg.reel);
+    const s={id:r.id,name:r.name||'Sem nome',uid:r.uid,eq:num(r.eq),ep:Number(r.ep)||0,sq:num(r.sq),sp:Number(r.sp)||0,pq:Number(r.pq)||0,rq:num(r.rq),pod:Number(r.pod)||0,ret:Number(r.ret)||0};
+    s.pp=tierPts(s.pq);s.rp=s.rq*num(cfg.reel);
     s.podp=s.pod*(Number(cfg.pod_pts)||0);s.retp=s.ret*(Number(cfg.ret_pts)||0);
-    s.tp=Math.round((s.ep+s.sp+s.pp+s.rp+s.podp+s.retp)*10)/10;
+    s.tp=Math.round((s.ep+s.sp+s.pp+s.rp+s.podp+s.retp)*100)/100;
     return s;
   });
 }
 const F1=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const CATS={
-  total:{label:'🏆 Destaque do Mês',pts:s=>s.tp,det:s=>'pontos totais',fmt:F1},
-  extras:{label:'✂️ Serviços Extras',pts:s=>s.ep,det:s=>s.eq+' serviços'},
-  subs:{label:'💳 Assinaturas',pts:s=>s.sp,det:s=>s.sq+' vendas'},
-  prods:{label:'🧴 Produtos',pts:s=>s.pp,det:s=>brl(s.pq)+' em vendas'},
+  total:{label:'🏆 Destaque do Mês',pts:s=>s.tp,det:s=>'total em reais',money:true},
+  extras:{label:'✂️ Serviços Extras',pts:s=>s.ep,det:s=>s.eq+' serviços',money:true},
+  subs:{label:'💳 Assinaturas',pts:s=>s.sp,det:s=>s.sq+' vendas',money:true},
+  prods:{label:'🧴 Produtos',pts:s=>s.pq,det:s=>'bônus '+brl(s.pp),money:true},
   reels:{label:'📸 Metagram',pts:s=>s.rp,det:s=>s.rq+' reels'},
   pod:{label:'🏅 Pódium',pts:s=>s.pod,det:s=>'de assinantes',unit:'%',fmt:F1},
   ret:{label:'🔁 Taxa de Retorno',pts:s=>s.ret,det:s=>'de retorno',unit:'%',fmt:F1}
@@ -163,8 +163,9 @@ const CATS={
 const DEFTIERS=[{min:300,pts:80},{min:600,pts:170},{min:1200,pts:250}];
 const tiers=()=>(Array.isArray(cfg.prod_tiers)&&cfg.prod_tiers.length?cfg.prod_tiers:DEFTIERS).map(t=>({min:num(t.min),pts:num(t.pts)})).sort((a,b)=>a.min-b.min);
 function tierPts(v){let p=0;tiers().forEach(t=>{if(v>=t.min&&t.min>0)p=Math.max(p,t.pts)});return p}
-const brl=v=>'R$ '+Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0});
-const tiersText=()=>tiers().map(t=>`${brl(t.min)} → ${t.pts} pts`).join(' • ');
+const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2});
+const numFmt=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
+const tiersText=()=>tiers().map(t=>`${brl(t.min)} → bônus ${brl(t.pts)}`).join(' • ');
 function leader(m){const l=stats(m).sort((a,b)=>b.tp-a.tp||a.name.localeCompare(b.name))[0];return(l&&l.tp>0)?l:null}
 function medal(n){
   const c={1:['#f7dc7a','#c9a227','#7a5f08'],2:['#f0f2f4','#aab1b8','#69737b'],3:['#efc39a','#b87333','#6d4116']}[n];
@@ -310,7 +311,7 @@ function renderLock(k){
 function relCard(){
   const L=leader(vm);const on_=(cfg.released||[]).includes(vm);
   return `<div class="card" style="border:2px solid var(--gold)"><b>🎉 Destaque de ${esc(mlabel(vm))}</b>
-   <p class="note">${L?`Líder agora: <b>${esc(L.name)}</b> com ${F1(L.tp)} pts.`:'Ainda sem pontos neste mês.'}<br>Status: <b>${on_?'✅ liberado para todos':'🔒 escondido dos barbeiros'}</b></p>
+   <p class="note">${L?`Líder agora: <b>${esc(L.name)}</b> com ${brl(L.tp)}.`:'Ainda sem valores neste mês.'}<br>Status: <b>${on_?'✅ liberado para todos':'🔒 escondido dos barbeiros'}</b></p>
    ${on_?'<button class="btn red" id="relx">Esconder de novo</button>':'<button class="btn gold" id="relgo">🎉 Liberar destaque para todos</button>'}
    <button class="btn ghost" id="relpv">👁 Ver a tela de parabéns</button></div>`;
 }
@@ -334,7 +335,7 @@ function renderRank(el,k,adm){
   if(!d){el.innerHTML='<div class="card note">Carregando…</div>';return}
   const showLock=preview?(pvForce?pvForce==='lock':d.locked):(d.locked&&!isA());
   if(showLock){el.innerHTML=renderLock(vm);return}
-  const c=CATS[k],F=c.fmt||(v=>v),U=c.unit||'pts';
+  const c=CATS[k],F=c.money?numFmt:(c.fmt||(v=>v)),U=c.money?'reais':(c.unit||'pts');
   const list=stats(vm).map(s=>({s,p:c.pts(s)})).sort((a,b)=>b.p-a.p||a.s.name.localeCompare(b.s.name));
   const pod=[0,1,2].map(i=>{
     const it=list[i],n=i+1;
@@ -342,12 +343,12 @@ function renderRank(el,k,adm){
     return `<div class="pc p${n} ${it.s.uid&&it.s.uid===user.id?'me':''}">${n===1?'<div class="trophy">🏆</div>':''}${medal(n)}<div class="nm">${esc(it.s.name)}</div><div class="pt">${F(it.p)}</div><div class="un">${U}</div><div class="dt">${c.det(it.s)}</div></div>`;
   }).join('');
   const mini={1:'🥇',2:'🥈',3:'🥉'};
-  const rows=list.map((it,i)=>`<div class="row ${it.s.uid&&it.s.uid===user.id?'me':''}" data-nm="${esc(it.s.name.toLowerCase())}"><div class="n">${i+1}</div><div class="nm">${esc(it.s.name)}<div class="dt">${c.det(it.s)}</div></div><div class="pt">${i<3?mini[i+1]+' ':''}${F(it.p)} ${U}</div></div>`).join('');
+  const rows=list.map((it,i)=>`<div class="row ${it.s.uid&&it.s.uid===user.id?'me':''}" data-nm="${esc(it.s.name.toLowerCase())}"><div class="n">${i+1}</div><div class="nm">${esc(it.s.name)}<div class="dt">${c.det(it.s)}</div></div><div class="pt">${i<3?mini[i+1]+' ':''}${c.money?brl(it.p):F(it.p)+' '+U}</div></div>`).join('');
   let extra='';
-  if(k==='extras')extra=`<div class="h2">Tabela de pontos</div><div class="card" style="padding:6px 14px">`+services.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${esc(s.name)}</span><b>${num(s.pts)} pts</b></div>`).join('')+`</div>`;
+  if(k==='extras')extra=`<div class="h2">Tabela de valores</div><div class="card" style="padding:6px 14px">`+services.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${esc(s.name)}</span><b>${brl(s.pts)}</b></div>`).join('')+`</div>`;
   else if(k==='pod'||k==='ret')extra=`<div class="h2">Como funciona</div><div class="card note">${k==='pod'?'Porcentagem de clientes atendidos por cada barbeiro que são assinantes.':'Porcentagem de clientes de cada barbeiro que voltaram.'} Quem preenche é o administrador, no último dia do mês. Até lá fica zerado.</div>`;
-  else if(k==='prods')extra=`<div class="h2">Como funciona</div><div class="card note">Vale a maior faixa alcançada no mês: <b>${tiersText()}</b>. Abaixo de ${brl(tiers()[0]?tiers()[0].min:300)} não pontua.</div>`;
-  else if(k==='total')extra=`<div class="h2">Como se ganha ponto</div><div class="card note">Serviços extras (veja a tabela na aba Serviços Extras) • Assinatura vendida: <b>${num(cfg.sub)} pts</b> • Produtos (por faixa de vendas): <b>${tiersText()}</b> • Reel postado: <b>${num(cfg.reel)} pts</b>${(Number(cfg.pod_pts)||Number(cfg.ret_pts))?` • Pódium: <b>${Number(cfg.pod_pts)||0} pt por 1%</b> • Taxa de retorno: <b>${Number(cfg.ret_pts)||0} pt por 1%</b>`:''}</div>`;
+  else if(k==='prods')extra=`<div class="h2">Como funciona</div><div class="card note">Cada lançamento é o valor vendido em reais. Quando o total do mês bate uma faixa, o barbeiro ganha o bônus (vale a maior faixa alcançada): <b>${tiersText()}</b>. Abaixo de ${brl(tiers()[0]?tiers()[0].min:300)} não tem bônus. O bônus entra no Destaque do Mês.</div>`;
+  else if(k==='total')extra=`<div class="h2">Como entra no total (R$)</div><div class="card note">Serviços extras e assinaturas: o valor de cada lançamento • Produtos: bônus por faixa (<b>${tiersText()}</b>) • Reel postado: <b>${num(cfg.reel)} pts</b> (cada ponto conta como R$ 1)${(Number(cfg.pod_pts)||Number(cfg.ret_pts))?` • Pódium: <b>${brl(Number(cfg.pod_pts)||0)} por 1%</b> • Taxa de retorno: <b>${brl(Number(cfg.ret_pts)||0)} por 1%</b>`:''}</div>`;
   const ban=(adm&&d.locked)?`<div class="banner">🔒 Os barbeiros NÃO estão vendo este ranking agora. Só você vê.</div>`:'';
   const win=(vm!==curKey()&&list[0]&&list[0].p>0&&k==='total')?`<div class="banner">🎉 Destaque de ${esc(mlabel(vm))}: <b>${esc(list[0].s.name)}</b>!</div>`:'';
   el.innerHTML=(adm&&k==='total'?relCard():'')+ban+win+`<div class="podium">${pod}</div>${rows?`<div class="h2">Classificação geral</div><input id="flt" placeholder="🔎 Filtrar barbeiro" value="${esc(fltText)}" style="margin-bottom:6px"><div id="rows">${rows}</div>`:''}${extra}`;
@@ -362,7 +363,7 @@ function renderSplash(L,demo){
   app.innerHTML=header()+`<div class="splash">${cf}${crownSvg()}
    <div class="ph">${ph?`<img src="${esc(ph)}" alt="">`:esc((L.name||'?').trim().charAt(0).toUpperCase())}</div>
    <div class="pk">PARABÉNS!</div><div class="pn">${esc(L.name)}</div>
-   <div class="ps">Barbeiro destaque de ${esc(mlabel(L.m))}</div><div class="pp">🏆 ${F1(L.pts)} pontos</div>
+   <div class="ps">Barbeiro destaque de ${esc(mlabel(L.m))}</div><div class="pp">🏆 ${brl(L.pts)}</div>
    <div class="pm">Parabéns pelo desempenho, dedicação e talento! Você fez a Alta Performance Gold Barber brilhar este mês. 👏✨</div>
    <button class="btn gold" id="spb">${demo?'Voltar':'Ver o ranking'}</button></div>`;
   on(app,'spb',()=>{if(demo)demoM=null;else splashSeen=true;render()});
@@ -374,9 +375,15 @@ function kindName(x){
   if(x.kind==='e')return pre+svName(x.service_id);
   return pre+({s:'Assinatura vendida',p:'Produto vendido',r:'Reel postado'}[x.kind]||'Lançamento');
 }
+function entryText(x){
+  const a=Number(x.amount)||0;
+  if(x.kind==='p')return '— '+brl(a||x.qty);
+  if(x.kind==='r')return '× '+x.qty;
+  return '× '+x.qty+' — '+brl(a);
+}
 function logList(items,canDel,after){
   if(!items.length)return '<div class="card note">Nenhum lançamento ainda.</div>';
-  return '<div class="card" style="padding:4px 14px">'+items.map(x=>`<div class="logrow"><div>${esc(kindName(x))} ${x.kind==='p'?'— '+brl(x.qty):'× '+x.qty}<small>${fmtDT(x.created_at)}</small></div>${canDel&&(isA()||(!x.adj&&x.month===curKey()))?`<button class="iconbtn" data-del="${esc(x.id)}" aria-label="Apagar">✕</button>`:''}</div>`).join('')+'</div>';
+  return '<div class="card" style="padding:4px 14px">'+items.map(x=>`<div class="logrow"><div>${esc(kindName(x))} ${entryText(x)}<small>${fmtDT(x.created_at)}</small></div>${canDel&&(isA()||(!x.adj&&x.month===curKey()))?`<button class="iconbtn" data-del="${esc(x.id)}" aria-label="Apagar">✕</button>`:''}</div>`).join('')+'</div>';
 }
 function bindDel(el,after){
   el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
@@ -398,33 +405,45 @@ function renderLaunch(el){
     return;
   }
   if(!form.s||!services.find(v=>v.id===form.s))form.s=(services[0]||{}).id||'';
-  const kinds=[['e','✂️ Serviço extra'],['s','💳 Assinatura'],['p','🧴 Produto (R$)'],['r','📸 Reel']];
+  const kinds=[['e','✂️ Serviço extra'],['s','💳 Assinatura'],['p','🧴 Produto'],['r','📸 Reel']];
+  const hasVal=form.k==='e'||form.k==='s';
+  const defV=form.k==='e'?(Number((services.find(v=>v.id===form.s)||{}).pts)||0):form.k==='s'?(Number(cfg.sub)||0):0;
+  const unitV=(form.v!=null)?form.v:defV;
   el.innerHTML=`<div class="card"><b>O que você fez?</b>
    <div class="seg">${kinds.map(([k,l])=>`<button data-k="${k}" class="${form.k===k?'on':''}">${l}</button>`).join('')}</div>
-   ${form.k==='e'?`<label for="fs">Qual serviço?</label><select id="fs">${services.map(s=>`<option value="${s.id}" ${s.id===form.s?'selected':''}>${esc(s.name)} — ${num(s.pts)} pts</option>`).join('')}</select>`:''}
+   ${form.k==='e'?`<label for="fs">Qual serviço?</label><select id="fs">${services.map(s=>`<option value="${s.id}" ${s.id===form.s?'selected':''}>${esc(s.name)} — ${brl(s.pts)}</option>`).join('')}</select>`:''}
    <label for="fq">${form.k==='p'?'Valor vendido (R$)':'Quantidade'}</label><input id="fq" type="number" inputmode="numeric" min="1" max="${form.k==='p'?20000:50}" value="${form.q}">
+   ${hasVal?`<label for="fv">Valor de cada um (R$) — já vem preenchido, você pode editar</label><input id="fv" type="number" inputmode="decimal" step="0.01" min="0" value="${unitV}"><p class="note" id="ftot" style="margin:8px 0 0">Total do lançamento: <b>${brl(unitV*form.q)}</b></p>`:''}
    <button class="btn gold" id="fsend">Enviar lançamento</button></div>
    <div class="h2">Últimos lançamentos</div><div id="recent">${logList(myEntries.slice(0,8),true)}</div>`;
-  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{form.k=b.dataset.k;render()});
-  const fs=el.querySelector('#fs');if(fs)fs.onchange=()=>{form.s=fs.value};
-  el.querySelector('#fq').oninput=e=>{form.q=Math.max(1,Math.min(form.k==='p'?20000:50,num(e.target.value)||1))};
+  const maxQ=()=>form.k==='p'?20000:50;
+  const updTot=()=>{const t=el.querySelector('#ftot');if(t){const u=(form.v!=null)?form.v:defV;t.innerHTML='Total do lançamento: <b>'+brl(u*form.q)+'</b>'}};
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{form.k=b.dataset.k;form.v=null;render()});
+  const fs=el.querySelector('#fs');if(fs)fs.onchange=()=>{form.s=fs.value;form.v=null;render()};
+  el.querySelector('#fq').oninput=e=>{form.q=Math.max(1,Math.min(maxQ(),num(e.target.value)||1));updTot()};
+  const fv=el.querySelector('#fv');if(fv)fv.oninput=e=>{form.v=dec(e.target.value);updTot()};
   bindDel(el.querySelector('#recent'),async()=>{await loadMine();render()});
   on(el,'fsend',async()=>{
     if(preview){toast('Prévia: não envia de verdade');return}
-    const q=Math.max(1,Math.min(form.k==='p'?20000:50,num(el.querySelector('#fq').value)));
+    const q=Math.max(1,Math.min(maxQ(),num(el.querySelector('#fq').value)));
     if(form.k==='e'&&!form.s){toast('Escolha o serviço');return}
-    if((form.k==='p'?q>=1000:q>=10)&&!confirm('Enviar '+(form.k==='p'?brl(q):'quantidade '+q)+'? Confirme se está certo.'))return;
-    const row={barber_id:mb.id,kind:form.k,qty:q};if(form.k==='e')row.service_id=form.s;
+    const unit=hasVal?dec(el.querySelector('#fv').value):0;
+    const amount=form.k==='p'?q:hasVal?Math.round(unit*q*100)/100:0;
+    if(amount>20000){toast('Valor alto demais. Confira.');return}
+    if(hasVal&&unit<=0){toast('Digite o valor');return}
+    if((amount>=1000||(!hasVal&&form.k!=='p'&&q>=10))&&!confirm('Enviar '+(hasVal?q+' × '+brl(unit)+' = '+brl(amount):form.k==='p'?brl(q):'quantidade '+q)+'? Confirme se está certo.'))return;
+    const row={barber_id:mb.id,kind:form.k,qty:q,amount};if(form.k==='e')row.service_id=form.s;
     const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
-    form.q=1;await loadMine();render();toast('Lançado! ✅');
+    form.q=1;form.v=null;await loadMine();render();toast('Lançado! ✅');
   });
 }
 function renderMine(el){
   const cur=myEntries.filter(x=>x.month===curKey());
   const sum=k=>Math.max(0,cur.filter(x=>x.kind===k).reduce((a,x)=>a+x.qty,0));
+  const val=k=>Math.max(0,cur.filter(x=>x.kind===k).reduce((a,x)=>a+(Number(x.amount)||0),0));
   el.innerHTML=`<div class="card"><b>Seu mês até agora</b><div class="g2" style="margin-top:10px">
-   <div class="note">Serviços extras<br><b style="font-size:20px;color:var(--ink)">${sum('e')}</b></div><div class="note">Assinaturas<br><b style="font-size:20px;color:var(--ink)">${sum('s')}</b></div>
-   <div class="note">Produtos vendidos<br><b style="font-size:20px;color:var(--ink)">${brl(sum('p'))}</b></div><div class="note">Reels<br><b style="font-size:20px;color:var(--ink)">${sum('r')}</b></div></div></div>
+   <div class="note">Serviços extras<br><b style="font-size:20px;color:var(--ink)">${sum('e')} <small style="font-size:13px">· ${brl(val('e'))}</small></b></div><div class="note">Assinaturas<br><b style="font-size:20px;color:var(--ink)">${sum('s')} <small style="font-size:13px">· ${brl(val('s'))}</small></b></div>
+   <div class="note">Produtos vendidos<br><b style="font-size:20px;color:var(--ink)">${brl(val('p'))}</b></div><div class="note">Reels<br><b style="font-size:20px;color:var(--ink)">${sum('r')}</b></div></div></div>
    <div class="h2">Todos os lançamentos</div><div id="all">${logList(myEntries,true)}</div>`;
   bindDel(el.querySelector('#all'),async()=>{await loadMine();render()});
 }
@@ -457,15 +476,15 @@ function renderBarbers(el){
   const list=barbers.map(b=>{
     const s=st.find(x=>x.id===b.id);const ev=evalsM.find(x=>x.barber_id===b.id)||{pod:0,ret:0};
     const cnt=(label,attr,val,pt)=>`<div class="cnt" style="display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>${label} <small style="color:var(--mute)">(${typeof pt==='number'?pt+' pts':pt})</small></span><input type="number" inputmode="numeric" min="0" data-adj="${esc(b.id)}|${attr}" value="${val}"></div>`;
-    return `<details data-b="${esc(b.id)}"><summary>${esc(b.name)} <small>${s?F1(s.tp):0} pts no mês</small></summary><div class="dbody">
+    return `<details data-b="${esc(b.id)}"><summary>${esc(b.name)} <small>${brl(s?s.tp:0)} no mês</small></summary><div class="dbody">
      <div style="display:flex;align-items:center;gap:12px;margin-top:12px"><div class="avatar">${b.photo?`<img src="${esc(b.photo)}" alt="" style="width:100%;height:100%;object-fit:cover">`:esc(b.name.charAt(0).toUpperCase())}</div><button class="btn small ghost" data-ph="${esc(b.id)}">📷 ${b.photo?'Trocar foto':'Adicionar foto'}</button></div>
      <label>Nome</label><input data-rn="${esc(b.id)}" value="${esc(b.name)}">
      <div class="h2">Avaliação de ${esc(mlabel(evM))} (%)</div>
      <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🏅 Pódium — % de assinantes</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|pod" value="${Number(ev.pod)||0}"></div>
      <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🔁 Taxa de retorno — %</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|ret" value="${Number(ev.ret)||0}"></div>
      <div class="h2">Quantidades de ${esc(mlabel(curKey()))} (você edita aqui)</div>
-     ${services.map(sv=>cnt(esc(sv.name),'e|'+sv.id,qtyOf(b.id,'e',sv.id),num(sv.pts))).join('')}
-     ${cnt('Assinaturas vendidas','s|',qtyOf(b.id,'s'),num(cfg.sub))}${cnt('Produtos vendidos em R$','p|',qtyOf(b.id,'p'),'valor em reais')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),num(cfg.reel))}
+     ${services.map(sv=>cnt(esc(sv.name),'e|'+sv.id,qtyOf(b.id,'e',sv.id),brl(sv.pts)+' cada')).join('')}
+     ${cnt('Assinaturas vendidas','s|',qtyOf(b.id,'s'),brl(cfg.sub)+' cada')}${cnt('Produtos vendidos em R$','p|',qtyOf(b.id,'p'),'valor em reais')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),num(cfg.reel)+' pts cada')}
      <p class="note">Mudou o número? O app registra a diferença como "Ajuste do ADM" no histórico.</p>
      <div class="h2">Histórico (apague se algo estiver errado)</div><div data-hist="${esc(b.id)}" class="note">Abra para carregar…</div>
      <button class="btn small red" style="margin-top:14px" data-rm="${esc(b.id)}">Remover barbeiro</button></div></details>`;
@@ -485,7 +504,8 @@ function renderBarbers(el){
   el.querySelectorAll('[data-adj]').forEach(i=>i.onchange=async()=>{
     const[id,k,sid]=i.dataset.adj.split('|');
     const delta=num(i.value)-qtyOf(id,k,sid);if(!delta)return;
-    const row={barber_id:id,month:curKey(),kind:k,qty:delta,adj:true};if(k==='e')row.service_id=sid;
+    const unitA=k==='e'?(Number((services.find(v=>v.id===sid)||{}).pts)||0):k==='s'?(Number(cfg.sub)||0):0;
+    const row={barber_id:id,month:curKey(),kind:k,qty:delta,amount:k==='p'?delta:Math.round(delta*unitA*100)/100,adj:true};if(k==='e')row.service_id=sid;
     const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
     await loadAdmin();await loadRank(curKey());render();toast('Ajustado ✅');
   });
@@ -529,29 +549,29 @@ function renderUsers(el){
 let cfgTimer=null;
 function saveCfgSoon(patch){Object.assign(cfg,patch);clearTimeout(cfgTimer);cfgTimer=setTimeout(async()=>{const{error}=await sb.from('config').update(patch).eq('id',1);if(error)fail(error)},600)}
 function renderCfg(el){
-  const svc=services.map(s=>`<div class="g3"><input data-sn="${esc(s.id)}" value="${esc(s.name)}" aria-label="Serviço"><input data-sp="${esc(s.id)}" type="number" inputmode="numeric" min="0" value="${num(s.pts)}" aria-label="Pontos"><button class="iconbtn" data-sd="${esc(s.id)}" aria-label="Remover">✕</button></div>`).join('');
+  const svc=services.map(s=>`<div class="g3"><input data-sn="${esc(s.id)}" value="${esc(s.name)}" aria-label="Serviço"><input data-sp="${esc(s.id)}" type="number" inputmode="decimal" step="0.01" min="0" value="${Number(s.pts)||0}" aria-label="Valor em reais"><button class="iconbtn" data-sd="${esc(s.id)}" aria-label="Remover">✕</button></div>`).join('');
   el.innerHTML=`
   <div class="h2">Última semana (surpresa)</div><div class="card">
    <label>Modo do ranking para os barbeiros</label>
    <select id="cm"><option value="auto" ${cfg.mode==='auto'?'selected':''}>Automático — esconde na última semana do mês</option><option value="locked" ${cfg.mode==='locked'?'selected':''}>Esconder agora</option><option value="open" ${cfg.mode==='open'?'selected':''}>Mostrar sempre (revelar)</option></select>
    <label>Mensagens engraçadas (uma por linha; uma por dia é sorteada)</label><textarea id="cmsg">${esc((cfg.messages||[]).join('\n'))}</textarea>
    <p class="note">O mês que passou também fica escondido até você liberar o destaque, na aba 🏆 Destaque do Mês.</p></div>
-  <div class="h2">Pontos por venda</div><div class="card"><div class="g2">
-   <div><label>Assinatura</label><input id="cs" type="number" inputmode="numeric" min="0" value="${num(cfg.sub)}"></div>
+  <div class="h2">Valores e bônus (R$)</div><div class="card"><div class="g2">
+   <div><label>Assinatura (R$) — valor padrão no lançamento</label><input id="cs" type="number" inputmode="decimal" step="0.01" min="0" value="${Number(cfg.sub)||0}"></div>
    <div></div></div>
-   <label>Produtos: pontos por faixa de vendas no mês (vale a maior faixa alcançada)</label>
-   <div id="tiers">${tiers().map((t,i)=>`<div class="g3" style="grid-template-columns:1fr 1fr 40px"><input data-tm="${i}" type="number" inputmode="numeric" min="1" value="${t.min}" aria-label="A partir de R$"><input data-tp="${i}" type="number" inputmode="numeric" min="0" value="${t.pts}" aria-label="Pontos"><button class="iconbtn" data-td="${i}" aria-label="Remover faixa">✕</button></div>`).join('')}</div>
-   <p class="note">Esquerda: a partir de quantos reais. Direita: quantos pontos. Ex.: 300 → 80, 600 → 170, 1200 → 250.</p>
+   <label>Produtos: bônus em R$ por faixa de vendas no mês (vale a maior faixa alcançada)</label>
+   <div id="tiers">${tiers().map((t,i)=>`<div class="g3" style="grid-template-columns:1fr 1fr 40px"><input data-tm="${i}" type="number" inputmode="numeric" min="1" value="${t.min}" aria-label="A partir de R$"><input data-tp="${i}" type="number" inputmode="numeric" min="0" value="${t.pts}" aria-label="Bônus em reais"><button class="iconbtn" data-td="${i}" aria-label="Remover faixa">✕</button></div>`).join('')}</div>
+   <p class="note">Esquerda: a partir de quantos reais vendidos. Direita: bônus em reais. Ex.: 300 → 80, 600 → 170, 1200 → 250.</p>
    <button class="btn small ghost" id="addT">+ Adicionar faixa</button>
-   <label>Reel postado (Metagram)</label><input id="cr" type="number" inputmode="numeric" min="0" value="${num(cfg.reel)}">
-   <div class="g2"><div><label>Pts por 1% de Pódium</label><input id="cpd" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.pod_pts)||0}"></div>
-   <div><label>Pts por 1% de Retorno</label><input id="crt" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.ret_pts)||0}"></div></div>
+   <label>Reel postado (Metagram) — continua em pontos</label><input id="cr" type="number" inputmode="numeric" min="0" value="${num(cfg.reel)}">
+   <div class="g2"><div><label>R$ por 1% de Pódium</label><input id="cpd" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.pod_pts)||0}"></div>
+   <div><label>R$ por 1% de Retorno</label><input id="crt" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.ret_pts)||0}"></div></div>
    <p class="note">Deixe 0 se Pódium e Taxa de retorno devem ter só o ranking próprio, sem somar no Destaque do Mês.</p></div>
-  <div class="h2">Serviços extras e pontos</div><div class="card">${svc}<button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
+  <div class="h2">Serviços extras e valores (R$)</div><div class="card">${svc}<p class="note">Esse valor já vem preenchido quando o barbeiro lança, e ele pode editar na hora. Mudar o valor aqui não altera lançamentos antigos.</p><button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
   <p class="note">Tudo aqui salva sozinho.</p>`;
   el.querySelector('#cm').onchange=e=>saveCfgSoon({mode:e.target.value});
   el.querySelector('#cmsg').oninput=e=>saveCfgSoon({messages:e.target.value.split('\n').map(x=>x.trim()).filter(Boolean)});
-  el.querySelector('#cs').oninput=e=>saveCfgSoon({sub:num(e.target.value)});
+  el.querySelector('#cs').oninput=e=>saveCfgSoon({sub:dec(e.target.value)});
   const readTiers=()=>[...el.querySelectorAll('[data-tm]')].map((m,i)=>({min:num(m.value),pts:num(el.querySelector(`[data-tp="${i}"]`).value)}));
   el.querySelectorAll('[data-tm],[data-tp]').forEach(i=>i.oninput=()=>saveCfgSoon({prod_tiers:readTiers()}));
   el.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>{const t=readTiers();t.splice(+b.dataset.td,1);saveCfgSoon({prod_tiers:t});render()});
@@ -560,7 +580,7 @@ function renderCfg(el){
   el.querySelector('#cpd').oninput=e=>saveCfgSoon({pod_pts:dec(e.target.value)});
   el.querySelector('#crt').oninput=e=>saveCfgSoon({ret_pts:dec(e.target.value)});
   el.querySelectorAll('[data-sn]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({name:i.value.trim()||'Serviço'}).eq('id',i.dataset.sn);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
-  el.querySelectorAll('[data-sp]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({pts:num(i.value)}).eq('id',i.dataset.sp);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
+  el.querySelectorAll('[data-sp]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({pts:dec(i.value)}).eq('id',i.dataset.sp);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
   el.querySelectorAll('[data-sd]').forEach(i=>i.onclick=async()=>{if(!confirm('Remover este serviço? Lançamentos antigos dele deixam de contar pontos.'))return;const{error}=await sb.from('services').delete().eq('id',i.dataset.sd);if(error)return fail(error);await loadCore();render()});
   on(el,'addS',async()=>{const{error}=await sb.from('services').insert({name:'Novo serviço',pts:10});if(error)return fail(error);await loadCore();render()});
 }
