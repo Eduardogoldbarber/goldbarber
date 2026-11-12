@@ -144,8 +144,8 @@ function stats(m){
   const d=ranks[m];if(!d||!d.rows)return [];
   const arr=d.rows.map(r=>{
     const s={id:r.id,name:r.name||'Sem nome',uid:r.uid,eq:num(r.eq),ep:Number(r.ep)||0,sq:num(r.sq),sp:Number(r.sp)||0,pq:Number(r.pq)||0,rq:num(r.rq),pod:Number(r.pod)||0,ret:Number(r.ret)||0};
-    s.pp=tierPts(s.pq);s.rp=s.rq*num(cfg.reel);
-    s.tp=Math.round((s.ep+s.sp+s.pp+s.rp)*100)/100;
+    s.rp=s.rq*(Number(cfg.reel)||0);
+    s.tp=Math.round((s.ep+s.sp+s.pq+s.rp)*100)/100;
     return s;
   });
   placeAll(arr);return arr;
@@ -160,7 +160,7 @@ const CATS={
   total:{label:'🏆 Destaque do Mês',pts:s=>s.dp,det:s=>brl(s.tp)+' no total',unit:'pts'},
   extras:{label:'✂️ Serviços Extras',pts:s=>s.ep,det:s=>s.eq+' serviços',money:true},
   subs:{label:'💳 Assinaturas',pts:s=>s.sp,det:s=>s.sq+' vendas',money:true},
-  prods:{label:'🧴 Produtos',pts:s=>s.pq,det:s=>'bônus '+brl(s.pp),money:true},
+  prods:{label:'🧴 Produtos',pts:s=>s.pq,det:s=>'em vendas',money:true},
   reels:{label:'📸 Metagram',pts:s=>s.rp,det:s=>s.rq+' reels',money:true},
   pod:{label:'🏅 Pódium',pts:s=>s.pod,det:s=>'de assinantes',unit:'%',fmt:F1},
   ret:{label:'🔁 Taxa de Retorno',pts:s=>s.ret,det:s=>'de retorno',unit:'%',fmt:F1}
@@ -360,12 +360,12 @@ function renderRank(el,k,adm){
   let extra='';
   if(k==='extras')extra=`<div class="h2">Tabela de valores</div><div class="card" style="padding:6px 14px">`+services.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${esc(s.name)}</span><b>${brl(s.pts)}</b></div>`).join('')+`</div>`;
   else if(k==='pod'||k==='ret')extra=`<div class="h2">Como funciona</div><div class="card note">${k==='pod'?'Porcentagem de clientes atendidos por cada barbeiro que são assinantes.':'Porcentagem de clientes de cada barbeiro que voltaram.'} Quem preenche é o administrador, no último dia do mês. Até lá fica zerado.</div>`;
-  else if(k==='prods')extra=`<div class="h2">Como funciona</div><div class="card note">Cada lançamento é o valor vendido em reais. Quando o total do mês bate uma faixa, o barbeiro ganha o bônus (vale a maior faixa alcançada): <b>${tiersText()}</b>. Abaixo de ${brl(tiers()[0]?tiers()[0].min:300)} não tem bônus. O bônus entra no Destaque do Mês.</div>`;
+  else if(k==='prods')extra=`<div class="h2">Como funciona</div><div class="card note">Cada lançamento é o valor vendido em reais. O ranking é por quanto cada barbeiro vendeu de produtos no mês.</div>`;
   else if(k==='total'){
     const st=stats(vm);
     const nm=(f,pl)=>{const n=st.filter(x=>placeOf(st,f,x)===pl).map(x=>esc(x.name));return n.length?n.join(', '):'—'};
     extra=`<div class="h2">Quem está em 1º e 2º em cada ranking</div><div class="card" style="padding:6px 14px">`+PLC.map(([key,lab,f])=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);font-size:14px"><b>${lab}</b><br>🥇 ${nm(f,1)} <small>(2 pts)</small><br>🥈 ${nm(f,2)} <small>(1 pt)</small></div>`).join('')+`</div>
-    <div class="h2">Como o destaque é calculado</div><div class="card note">Em cada ranking (Serviços Extras, Assinaturas, Produtos, Metagram, Pódium e Taxa de Retorno): <b>1º lugar ganha 2 pontos</b> e <b>2º lugar ganha 1 ponto</b>. Quem somar mais pontos é o Barbeiro Destaque. Em caso de empate, vence quem fez mais reais no total (serviços + assinaturas + bônus de produtos + reels). Quem está com zero num ranking não pontua nele.</div>`;
+    <div class="h2">Como o destaque é calculado</div><div class="card note">Em cada ranking (Serviços Extras, Assinaturas, Produtos, Metagram, Pódium e Taxa de Retorno): <b>1º lugar ganha 2 pontos</b> e <b>2º lugar ganha 1 ponto</b>. Quem somar mais pontos é o Barbeiro Destaque. Em caso de empate, vence quem fez mais reais no total (serviços + assinaturas + produtos + reels). Quem está com zero num ranking não pontua nele.</div>`;
   }
   const ban=(adm&&d.locked)?`<div class="banner">🔒 Os barbeiros NÃO estão vendo este ranking agora. Só você vê.</div>`:'';
   const win=(vm!==curKey()&&list[0]&&list[0].p>0&&k==='total')?`<div class="banner">🎉 Destaque de ${esc(mlabel(vm))}: <b>${esc(list[0].s.name)}</b>!</div>`:'';
@@ -458,17 +458,17 @@ function renderLaunch(el){
 }
 function renderMine(el){
   const P=myPanel||{},n=k=>Number(P[k])||0;
-  const bonus=tierPts(n('pq')),reelV=n('rq')*(Number(cfg.reel)||0),tot=Math.round((n('ep')+n('sp')+bonus+reelV)*100)/100;
+  const reelV=n('rq')*(Number(cfg.reel)||0),tot=Math.round((n('ep')+n('sp')+n('pq')+reelV)*100)/100;
   const box=(t,v,sm)=>`<div class="note">${t}<br><b style="font-size:20px;color:var(--ink)">${v}</b>${sm?`<br><small>${sm}</small>`:''}</div>`;
   el.innerHTML=`<div class="card"><b>Seu painel de ${esc(mlabel(curKey()))}</b>
    <div class="g2" style="margin-top:12px">
    ${box('✂️ Serviços extras',brl(n('ep')),n('eq')+' serviço'+(n('eq')===1?'':'s'))}
    ${box('💳 Assinaturas',brl(n('sp')),n('sq')+' venda'+(n('sq')===1?'':'s'))}
-   ${box('🧴 Produtos',brl(n('pq')),bonus?'bônus '+brl(bonus):'sem bônus ainda')}
+   ${box('🧴 Produtos',brl(n('pq')),'vendido no mês')}
    ${box('📸 Metagram',n('rq')+' reel'+(n('rq')===1?'':'s'),brl(reelV))}
    ${box('🏅 Pódium',numFmt(n('pod'))+'%','o ADM atualiza no fim do mês')}
    ${box('🔁 Taxa de retorno',numFmt(n('ret'))+'%','o ADM atualiza no fim do mês')}
-   </div><p class="note" style="margin-top:12px">Total em reais (serviços + assinaturas + bônus de produtos + reels): <b>${brl(tot)}</b></p></div>
+   </div><p class="note" style="margin-top:12px">Total em reais (serviços + assinaturas + produtos + reels): <b>${brl(tot)}</b></p></div>
    <div class="h2">Meus lançamentos</div><div id="all">${logList(myEntries,true)}</div>`;
   bindDel(el.querySelector('#all'),async()=>{await loadMine();await loadMyPanel();render()});
 }
@@ -582,13 +582,9 @@ function renderCfg(el){
    <select id="cm"><option value="auto" ${cfg.mode==='auto'?'selected':''}>Automático — esconde na última semana do mês</option><option value="locked" ${cfg.mode==='locked'?'selected':''}>Esconder agora</option><option value="open" ${cfg.mode==='open'?'selected':''}>Mostrar sempre (revelar)</option></select>
    <label>Mensagens engraçadas (uma por linha; uma por dia é sorteada)</label><textarea id="cmsg">${esc((cfg.messages||[]).join('\n'))}</textarea>
    <p class="note">O mês que passou também fica escondido até você liberar o destaque, na aba 🏆 Destaque do Mês.</p></div>
-  <div class="h2">Valores e bônus (R$)</div><div class="card"><div class="g2">
+  <div class="h2">Valores (R$)</div><div class="card"><div class="g2">
    <div><label>Assinatura (R$) — valor padrão no lançamento</label><input id="cs" type="number" inputmode="decimal" step="0.01" min="0" value="${Number(cfg.sub)||0}"></div>
    <div></div></div>
-   <label>Produtos: bônus em R$ por faixa de vendas no mês (vale a maior faixa alcançada)</label>
-   <div id="tiers">${tiers().map((t,i)=>`<div class="g3" style="grid-template-columns:1fr 1fr 40px"><input data-tm="${i}" type="number" inputmode="numeric" min="1" value="${t.min}" aria-label="A partir de R$"><input data-tp="${i}" type="number" inputmode="numeric" min="0" value="${t.pts}" aria-label="Bônus em reais"><button class="iconbtn" data-td="${i}" aria-label="Remover faixa">✕</button></div>`).join('')}</div>
-   <p class="note">Esquerda: a partir de quantos reais vendidos. Direita: bônus em reais. Ex.: 300 → 80, 600 → 170, 1200 → 250.</p>
-   <button class="btn small ghost" id="addT">+ Adicionar faixa</button>
    <label>Reel postado (Metagram) — R$ por reel</label><input id="cr" type="number" inputmode="decimal" step="0.01" min="0" value="${Number(cfg.reel)||0}">
    <p class="note">Deixe 0 se Pódium e Taxa de retorno devem ter só o ranking próprio, sem somar no Destaque do Mês.</p></div>
   <div class="h2">Serviços extras e valores (R$)</div><div class="card">${svc}<p class="note">Esse valor já vem preenchido quando o barbeiro lança, e ele pode editar na hora. Mudar o valor aqui não altera lançamentos antigos.</p><button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
@@ -596,10 +592,6 @@ function renderCfg(el){
   el.querySelector('#cm').onchange=e=>saveCfgSoon({mode:e.target.value});
   el.querySelector('#cmsg').oninput=e=>saveCfgSoon({messages:e.target.value.split('\n').map(x=>x.trim()).filter(Boolean)});
   el.querySelector('#cs').oninput=e=>saveCfgSoon({sub:dec(e.target.value)});
-  const readTiers=()=>[...el.querySelectorAll('[data-tm]')].map((m,i)=>({min:num(m.value),pts:num(el.querySelector(`[data-tp="${i}"]`).value)}));
-  el.querySelectorAll('[data-tm],[data-tp]').forEach(i=>i.oninput=()=>saveCfgSoon({prod_tiers:readTiers()}));
-  el.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>{const t=readTiers();t.splice(+b.dataset.td,1);saveCfgSoon({prod_tiers:t});render()});
-  on(el,'addT',()=>{const t=readTiers();t.push({min:(t.length?t[t.length-1].min:0)+300,pts:0});saveCfgSoon({prod_tiers:t});render()});
   el.querySelector('#cr').oninput=e=>saveCfgSoon({reel:dec(e.target.value)});
   el.querySelectorAll('[data-sn]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({name:i.value.trim()||'Serviço'}).eq('id',i.dataset.sn);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
   el.querySelectorAll('[data-sp]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({pts:dec(i.value)}).eq('id',i.dataset.sp);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
