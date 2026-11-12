@@ -142,21 +142,26 @@ const svName=id=>{const s=services.find(v=>v.id===id);return s?s.name:'Serviço 
 /* ---------- pontuação ---------- */
 function stats(m){
   const d=ranks[m];if(!d||!d.rows)return [];
-  return d.rows.map(r=>{
+  const arr=d.rows.map(r=>{
     const s={id:r.id,name:r.name||'Sem nome',uid:r.uid,eq:num(r.eq),ep:Number(r.ep)||0,sq:num(r.sq),sp:Number(r.sp)||0,pq:Number(r.pq)||0,rq:num(r.rq),pod:Number(r.pod)||0,ret:Number(r.ret)||0};
     s.pp=tierPts(s.pq);s.rp=s.rq*num(cfg.reel);
-    s.podp=s.pod*(Number(cfg.pod_pts)||0);s.retp=s.ret*(Number(cfg.ret_pts)||0);
-    s.tp=Math.round((s.ep+s.sp+s.pp+s.rp+s.podp+s.retp)*100)/100;
+    s.tp=Math.round((s.ep+s.sp+s.pp+s.rp)*100)/100;
     return s;
   });
+  placeAll(arr);return arr;
+}
+const PLC=[['extras','Serviços Extras',s=>s.ep],['subs','Assinaturas',s=>s.sp],['prods','Produtos',s=>s.pq],['reels','Metagram',s=>s.rq],['pod','Pódium',s=>s.pod],['ret','Taxa de Retorno',s=>s.ret]];
+function placeOf(arr,f,s){const v=f(s);if(!(v>0))return 0;return 1+arr.filter(o=>f(o)>v).length}
+function placeAll(arr){
+  arr.forEach(s=>{s.pl={};s.dp=0;PLC.forEach(([k,,f])=>{const pl=placeOf(arr,f,s);s.pl[k]=pl;s.dp+=pl===1?2:pl===2?1:0})});
 }
 const F1=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const CATS={
-  total:{label:'🏆 Destaque do Mês',pts:s=>s.tp,det:s=>'total em reais',money:true},
+  total:{label:'🏆 Destaque do Mês',pts:s=>s.dp,det:s=>brl(s.tp)+' no total',unit:'pts'},
   extras:{label:'✂️ Serviços Extras',pts:s=>s.ep,det:s=>s.eq+' serviços',money:true},
   subs:{label:'💳 Assinaturas',pts:s=>s.sp,det:s=>s.sq+' vendas',money:true},
   prods:{label:'🧴 Produtos',pts:s=>s.pq,det:s=>'bônus '+brl(s.pp),money:true},
-  reels:{label:'📸 Metagram',pts:s=>s.rp,det:s=>s.rq+' reels'},
+  reels:{label:'📸 Metagram',pts:s=>s.rp,det:s=>s.rq+' reels',money:true},
   pod:{label:'🏅 Pódium',pts:s=>s.pod,det:s=>'de assinantes',unit:'%',fmt:F1},
   ret:{label:'🔁 Taxa de Retorno',pts:s=>s.ret,det:s=>'de retorno',unit:'%',fmt:F1}
 };
@@ -166,7 +171,7 @@ function tierPts(v){let p=0;tiers().forEach(t=>{if(v>=t.min&&t.min>0)p=Math.max(
 const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2});
 const numFmt=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
 const tiersText=()=>tiers().map(t=>`${brl(t.min)} → bônus ${brl(t.pts)}`).join(' • ');
-function leader(m){const l=stats(m).sort((a,b)=>b.tp-a.tp||a.name.localeCompare(b.name))[0];return(l&&l.tp>0)?l:null}
+function leader(m){const l=stats(m).sort((a,b)=>b.dp-a.dp||b.tp-a.tp||a.name.localeCompare(b.name))[0];return(l&&(l.dp>0||l.tp>0))?l:null}
 function medal(n){
   const c={1:['#f7dc7a','#c9a227','#7a5f08'],2:['#f0f2f4','#aab1b8','#69737b'],3:['#efc39a','#b87333','#6d4116']}[n];
   const rib={1:'#1b1b1b',2:'#555',3:'#7a3b12'}[n];
@@ -197,6 +202,8 @@ async function loadCore(){
 }
 async function loadRank(m){const{data,error}=await sb.rpc('get_ranking',{p_month:m});if(error){fail(error);return}ranks[m]=data}
 async function loadMine(){const mb=myBarber();if(!mb){myEntries=[];return}const{data}=await sb.from('entries').select('*').eq('barber_id',mb.id).order('created_at',{ascending:false}).limit(200);myEntries=data||[]}
+let myPanel=null;
+async function loadMyPanel(){if(!myBarber()){myPanel=null;return}const{data,error}=await sb.rpc('get_my_panel',{p_month:curKey()});if(error){fail(error);return}myPanel=data}
 async function loadAdmin(){
   if(!evM)evM=curKey();
   const [q,e]=await Promise.all([sb.rpc('admin_qty',{p_month:curKey()}),sb.from('evals').select('*').eq('month',evM)]);
@@ -209,7 +216,7 @@ async function afterLogin(){
   try{
     await loadProfile();
     if(!prof||!prof.role){render();return}
-    await loadCore();vm=defaultView();await loadRank(vm);await loadMine();
+    await loadCore();vm=defaultView();if(isA())await loadRank(vm);await loadMine();
     tab=isA()?'total':'launch';render();
   }catch(e){fail(e);render()}
 }
@@ -218,6 +225,7 @@ async function openTab(t){
   try{
     if(t in CATS)await loadRank(vm);
     if(t==='launch'||t==='mine')await loadMine();
+    if(t==='mine')await loadMyPanel();
     if(t==='barbers')await loadAdmin();
     if(t==='users')await loadUsers();
     if(t==='cfg')await loadCore();
@@ -267,15 +275,15 @@ function render(){
   if(!prof.role)return renderPending();
   if(!cfg)return app.innerHTML=header()+'<div class="card note">Carregando…</div>';
   const adm=isA()&&!preview;
-  if(demoM&&isA()&&!preview){const L=leader(demoM);if(L){renderSplash({m:demoM,bid:L.id,name:L.name,pts:L.tp},true);return}demoM=null}
+  if(demoM&&isA()&&!preview){const L=leader(demoM);if(L){renderSplash({m:demoM,bid:L.id,name:L.name,pts:L.dp},true);return}demoM=null}
   if(cfg.splash&&cfg.splash.bid&&!splashSeen&&(!isA()||preview)){renderSplash(cfg.splash,false);return}
   const barberTabs=['launch','mine'],adminTabs=['barbers','users','cfg'];
-  if(!tab||(adm&&barberTabs.includes(tab))||(!adm&&adminTabs.includes(tab)))tab=adm?'total':'launch';
+  if(!tab||(adm&&barberTabs.includes(tab))||(!adm&&(adminTabs.includes(tab)||tab in CATS)))tab=adm?'total':'launch';
   if(!vm)vm=defaultView();
   let t='';
   if(!adm)t+=`<button class="tab ${tab==='launch'?'on':''}" data-t="launch">➕ Lançar</button>`;
-  Object.entries(CATS).forEach(([k,c])=>t+=`<button class="tab ${tab===k?'on':''}" data-t="${k}">${c.label}</button>`);
-  if(!adm)t+=`<button class="tab ${tab==='mine'?'on':''}" data-t="mine">📋 Meus lançamentos</button>`;
+  if(adm)Object.entries(CATS).forEach(([k,c])=>t+=`<button class="tab ${tab===k?'on':''}" data-t="${k}">${c.label}</button>`);
+  if(!adm)t+=`<button class="tab ${tab==='mine'?'on':''}" data-t="mine">📊 Meu painel</button>`;
   if(adm)t+=`<button class="tab adm ${tab==='barbers'?'on':''}" data-t="barbers">👥 Barbeiros</button><button class="tab adm ${tab==='users'?'on':''}" data-t="users">👤 Usuários</button><button class="tab adm ${tab==='cfg'?'on':''}" data-t="cfg">⚙️ Configurar</button>`;
   const inRank=tab in CATS;
   let chips='';
@@ -311,7 +319,7 @@ function renderLock(k){
 function relCard(){
   const L=leader(vm);const on_=(cfg.released||[]).includes(vm);
   return `<div class="card" style="border:2px solid var(--gold)"><b>🎉 Destaque de ${esc(mlabel(vm))}</b>
-   <p class="note">${L?`Líder agora: <b>${esc(L.name)}</b> com ${brl(L.tp)}.`:'Ainda sem valores neste mês.'}<br>Status: <b>${on_?'✅ liberado para todos':'🔒 escondido dos barbeiros'}</b></p>
+   <p class="note">${L?`Líder agora: <b>${esc(L.name)}</b> com ${L.dp} ponto${L.dp===1?'':'s'} (${brl(L.tp)} no total).`:'Ainda sem valores neste mês.'}<br>Status: <b>${on_?'✅ liberado para todos':'🔒 escondido dos barbeiros'}</b></p>
    ${on_?'<button class="btn red" id="relx">Esconder de novo</button>':'<button class="btn gold" id="relgo">🎉 Liberar destaque para todos</button>'}
    <button class="btn ghost" id="relpv">👁 Ver a tela de parabéns</button></div>`;
 }
@@ -320,7 +328,7 @@ function bindRel(el){
     const L=leader(vm);if(!L){toast('Ainda não há pontos neste mês');return}
     if(!confirm('Liberar o destaque de '+mlabel(vm)+' ('+L.name+') para TODOS?'))return;
     const rel=[...new Set([...(cfg.released||[]),vm])];
-    const{error}=await sb.from('config').update({splash:{m:vm,bid:L.id,name:L.name,pts:L.tp},released:rel}).eq('id',1);
+    const{error}=await sb.from('config').update({splash:{m:vm,bid:L.id,name:L.name,pts:L.dp},released:rel}).eq('id',1);
     if(error)return fail(error);await loadCore();await loadRank(vm);render();toast('Destaque liberado! 🎉');
   });
   on(el,'relx',async()=>{
@@ -336,7 +344,7 @@ function renderRank(el,k,adm){
   const showLock=preview?(pvForce?pvForce==='lock':d.locked):(d.locked&&!isA());
   if(showLock){el.innerHTML=renderLock(vm);return}
   const c=CATS[k],F=c.money?numFmt:(c.fmt||(v=>v)),U=c.money?'reais':(c.unit||'pts');
-  const list=stats(vm).map(s=>({s,p:c.pts(s)})).sort((a,b)=>b.p-a.p||a.s.name.localeCompare(b.s.name));
+  const list=stats(vm).map(s=>({s,p:c.pts(s)})).sort((a,b)=>b.p-a.p||(k==='total'?b.s.tp-a.s.tp:0)||a.s.name.localeCompare(b.s.name));
   const pod=[0,1,2].map(i=>{
     const it=list[i],n=i+1;
     if(!it)return `<div class="pc p${n} empty">${medal(n)}<div class="nm">—</div><div class="pt">0</div></div>`;
@@ -348,7 +356,12 @@ function renderRank(el,k,adm){
   if(k==='extras')extra=`<div class="h2">Tabela de valores</div><div class="card" style="padding:6px 14px">`+services.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${esc(s.name)}</span><b>${brl(s.pts)}</b></div>`).join('')+`</div>`;
   else if(k==='pod'||k==='ret')extra=`<div class="h2">Como funciona</div><div class="card note">${k==='pod'?'Porcentagem de clientes atendidos por cada barbeiro que são assinantes.':'Porcentagem de clientes de cada barbeiro que voltaram.'} Quem preenche é o administrador, no último dia do mês. Até lá fica zerado.</div>`;
   else if(k==='prods')extra=`<div class="h2">Como funciona</div><div class="card note">Cada lançamento é o valor vendido em reais. Quando o total do mês bate uma faixa, o barbeiro ganha o bônus (vale a maior faixa alcançada): <b>${tiersText()}</b>. Abaixo de ${brl(tiers()[0]?tiers()[0].min:300)} não tem bônus. O bônus entra no Destaque do Mês.</div>`;
-  else if(k==='total')extra=`<div class="h2">Como entra no total (R$)</div><div class="card note">Serviços extras e assinaturas: o valor de cada lançamento • Produtos: bônus por faixa (<b>${tiersText()}</b>) • Reel postado: <b>${num(cfg.reel)} pts</b> (cada ponto conta como R$ 1)${(Number(cfg.pod_pts)||Number(cfg.ret_pts))?` • Pódium: <b>${brl(Number(cfg.pod_pts)||0)} por 1%</b> • Taxa de retorno: <b>${brl(Number(cfg.ret_pts)||0)} por 1%</b>`:''}</div>`;
+  else if(k==='total'){
+    const st=stats(vm);
+    const nm=(f,pl)=>{const n=st.filter(x=>placeOf(st,f,x)===pl).map(x=>esc(x.name));return n.length?n.join(', '):'—'};
+    extra=`<div class="h2">Quem está em 1º e 2º em cada ranking</div><div class="card" style="padding:6px 14px">`+PLC.map(([key,lab,f])=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);font-size:14px"><b>${lab}</b><br>🥇 ${nm(f,1)} <small>(2 pts)</small><br>🥈 ${nm(f,2)} <small>(1 pt)</small></div>`).join('')+`</div>
+    <div class="h2">Como o destaque é calculado</div><div class="card note">Em cada ranking (Serviços Extras, Assinaturas, Produtos, Metagram, Pódium e Taxa de Retorno): <b>1º lugar ganha 2 pontos</b> e <b>2º lugar ganha 1 ponto</b>. Quem somar mais pontos é o Barbeiro Destaque. Em caso de empate, vence quem fez mais reais no total (serviços + assinaturas + bônus de produtos + reels). Quem está com zero num ranking não pontua nele.</div>`;
+  }
   const ban=(adm&&d.locked)?`<div class="banner">🔒 Os barbeiros NÃO estão vendo este ranking agora. Só você vê.</div>`:'';
   const win=(vm!==curKey()&&list[0]&&list[0].p>0&&k==='total')?`<div class="banner">🎉 Destaque de ${esc(mlabel(vm))}: <b>${esc(list[0].s.name)}</b>!</div>`:'';
   el.innerHTML=(adm&&k==='total'?relCard():'')+ban+win+`<div class="podium">${pod}</div>${rows?`<div class="h2">Classificação geral</div><input id="flt" placeholder="🔎 Filtrar barbeiro" value="${esc(fltText)}" style="margin-bottom:6px"><div id="rows">${rows}</div>`:''}${extra}`;
@@ -363,7 +376,7 @@ function renderSplash(L,demo){
   app.innerHTML=header()+`<div class="splash">${cf}${crownSvg()}
    <div class="ph">${ph?`<img src="${esc(ph)}" alt="">`:esc((L.name||'?').trim().charAt(0).toUpperCase())}</div>
    <div class="pk">PARABÉNS!</div><div class="pn">${esc(L.name)}</div>
-   <div class="ps">Barbeiro destaque de ${esc(mlabel(L.m))}</div><div class="pp">🏆 ${brl(L.pts)}</div>
+   <div class="ps">Barbeiro destaque de ${esc(mlabel(L.m))}</div><div class="pp">🏆 ${numFmt(L.pts)} pontos</div>
    <div class="pm">Parabéns pelo desempenho, dedicação e talento! Você fez a Alta Performance Gold Barber brilhar este mês. 👏✨</div>
    <button class="btn gold" id="spb">${demo?'Voltar':'Ver o ranking'}</button></div>`;
   on(app,'spb',()=>{if(demo)demoM=null;else splashSeen=true;render()});
@@ -379,6 +392,7 @@ function entryText(x){
   const a=Number(x.amount)||0;
   if(x.kind==='p')return '— '+brl(a||x.qty);
   if(x.kind==='r')return '× '+x.qty;
+  if(!x.qty)return '— '+brl(a);
   return '× '+x.qty+' — '+brl(a);
 }
 function logList(items,canDel,after){
@@ -438,19 +452,26 @@ function renderLaunch(el){
   });
 }
 function renderMine(el){
-  const cur=myEntries.filter(x=>x.month===curKey());
-  const sum=k=>Math.max(0,cur.filter(x=>x.kind===k).reduce((a,x)=>a+x.qty,0));
-  const val=k=>Math.max(0,cur.filter(x=>x.kind===k).reduce((a,x)=>a+(Number(x.amount)||0),0));
-  el.innerHTML=`<div class="card"><b>Seu mês até agora</b><div class="g2" style="margin-top:10px">
-   <div class="note">Serviços extras<br><b style="font-size:20px;color:var(--ink)">${sum('e')} <small style="font-size:13px">· ${brl(val('e'))}</small></b></div><div class="note">Assinaturas<br><b style="font-size:20px;color:var(--ink)">${sum('s')} <small style="font-size:13px">· ${brl(val('s'))}</small></b></div>
-   <div class="note">Produtos vendidos<br><b style="font-size:20px;color:var(--ink)">${brl(val('p'))}</b></div><div class="note">Reels<br><b style="font-size:20px;color:var(--ink)">${sum('r')}</b></div></div></div>
-   <div class="h2">Todos os lançamentos</div><div id="all">${logList(myEntries,true)}</div>`;
-  bindDel(el.querySelector('#all'),async()=>{await loadMine();render()});
+  const P=myPanel||{},n=k=>Number(P[k])||0;
+  const bonus=tierPts(n('pq')),reelV=n('rq')*(Number(cfg.reel)||0),tot=Math.round((n('ep')+n('sp')+bonus+reelV)*100)/100;
+  const box=(t,v,sm)=>`<div class="note">${t}<br><b style="font-size:20px;color:var(--ink)">${v}</b>${sm?`<br><small>${sm}</small>`:''}</div>`;
+  el.innerHTML=`<div class="card"><b>Seu painel de ${esc(mlabel(curKey()))}</b>
+   <div class="g2" style="margin-top:12px">
+   ${box('✂️ Serviços extras',brl(n('ep')),n('eq')+' serviço'+(n('eq')===1?'':'s'))}
+   ${box('💳 Assinaturas',brl(n('sp')),n('sq')+' venda'+(n('sq')===1?'':'s'))}
+   ${box('🧴 Produtos',brl(n('pq')),bonus?'bônus '+brl(bonus):'sem bônus ainda')}
+   ${box('📸 Metagram',n('rq')+' reel'+(n('rq')===1?'':'s'),brl(reelV))}
+   ${box('🏅 Pódium',numFmt(n('pod'))+'%','o ADM atualiza no fim do mês')}
+   ${box('🔁 Taxa de retorno',numFmt(n('ret'))+'%','o ADM atualiza no fim do mês')}
+   </div><p class="note" style="margin-top:12px">Total em reais (serviços + assinaturas + bônus de produtos + reels): <b>${brl(tot)}</b></p></div>
+   <div class="h2">Meus lançamentos</div><div id="all">${logList(myEntries,true)}</div>`;
+  bindDel(el.querySelector('#all'),async()=>{await loadMine();await loadMyPanel();render()});
 }
 
 /* ---------- administrativo (A) ---------- */
 function qtyOf(bid,k,sid){
-  return Math.max(0,adminQ.filter(r=>r.b===bid&&r.k===k&&(k!=='e'||r.s===sid)).reduce((a,r)=>a+Number(r.q),0));
+  const f=k==='r'?(r=>Number(r.q)||0):(r=>Number(r.a)||0);
+  return Math.max(0,Math.round(adminQ.filter(r=>r.b===bid&&r.k===k&&(k!=='e'||r.s===sid)).reduce((a,r)=>a+f(r),0)*100)/100);
 }
 function pickPhoto(id){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
@@ -475,17 +496,17 @@ function renderBarbers(el){
    <label for="evm">Mês da avaliação</label><select id="evm">${ms.map(k=>`<option value="${k}" ${k===evM?'selected':''}>${mlabel(k)}</option>`).join('')}</select></div>`;
   const list=barbers.map(b=>{
     const s=st.find(x=>x.id===b.id);const ev=evalsM.find(x=>x.barber_id===b.id)||{pod:0,ret:0};
-    const cnt=(label,attr,val,pt)=>`<div class="cnt" style="display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>${label} <small style="color:var(--mute)">(${typeof pt==='number'?pt+' pts':pt})</small></span><input type="number" inputmode="numeric" min="0" data-adj="${esc(b.id)}|${attr}" value="${val}"></div>`;
+    const cnt=(label,attr,val,pt,stp)=>`<div class="cnt" style="display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>${label} <small style="color:var(--mute)">(${pt})</small></span><input type="number" inputmode="decimal" step="${stp||'0.01'}" min="0" data-adj="${esc(b.id)}|${attr}" value="${val}"></div>`;
     return `<details data-b="${esc(b.id)}"><summary>${esc(b.name)} <small>${brl(s?s.tp:0)} no mês</small></summary><div class="dbody">
      <div style="display:flex;align-items:center;gap:12px;margin-top:12px"><div class="avatar">${b.photo?`<img src="${esc(b.photo)}" alt="" style="width:100%;height:100%;object-fit:cover">`:esc(b.name.charAt(0).toUpperCase())}</div><button class="btn small ghost" data-ph="${esc(b.id)}">📷 ${b.photo?'Trocar foto':'Adicionar foto'}</button></div>
      <label>Nome</label><input data-rn="${esc(b.id)}" value="${esc(b.name)}">
      <div class="h2">Avaliação de ${esc(mlabel(evM))} (%)</div>
      <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🏅 Pódium — % de assinantes</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|pod" value="${Number(ev.pod)||0}"></div>
      <div class="cnt" style="display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:6px 0;font-size:14px"><span>🔁 Taxa de retorno — %</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" data-ev="${esc(b.id)}|ret" value="${Number(ev.ret)||0}"></div>
-     <div class="h2">Quantidades de ${esc(mlabel(curKey()))} (você edita aqui)</div>
-     ${services.map(sv=>cnt(esc(sv.name),'e|'+sv.id,qtyOf(b.id,'e',sv.id),brl(sv.pts)+' cada')).join('')}
-     ${cnt('Assinaturas vendidas','s|',qtyOf(b.id,'s'),brl(cfg.sub)+' cada')}${cnt('Produtos vendidos em R$','p|',qtyOf(b.id,'p'),'valor em reais')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),num(cfg.reel)+' pts cada')}
-     <p class="note">Mudou o número? O app registra a diferença como "Ajuste do ADM" no histórico.</p>
+     <div class="h2">Valores de ${esc(mlabel(curKey()))} em R$ (você edita aqui)</div>
+     ${services.map(sv=>cnt(esc(sv.name),'e|'+sv.id,qtyOf(b.id,'e',sv.id),'R$ vendido')).join('')}
+     ${cnt('Assinaturas','s|',qtyOf(b.id,'s'),'R$ vendido')}${cnt('Produtos','p|',qtyOf(b.id,'p'),'R$ vendido')}${cnt('Reels postados','r|',qtyOf(b.id,'r'),'quantidade','1')}
+     <p class="note">Mudou o valor? O app registra a diferença como "Ajuste do ADM" no histórico.</p>
      <div class="h2">Histórico (apague se algo estiver errado)</div><div data-hist="${esc(b.id)}" class="note">Abra para carregar…</div>
      <button class="btn small red" style="margin-top:14px" data-rm="${esc(b.id)}">Remover barbeiro</button></div></details>`;
   }).join('');
@@ -503,9 +524,9 @@ function renderBarbers(el){
   });
   el.querySelectorAll('[data-adj]').forEach(i=>i.onchange=async()=>{
     const[id,k,sid]=i.dataset.adj.split('|');
-    const delta=num(i.value)-qtyOf(id,k,sid);if(!delta)return;
-    const unitA=k==='e'?(Number((services.find(v=>v.id===sid)||{}).pts)||0):k==='s'?(Number(cfg.sub)||0):0;
-    const row={barber_id:id,month:curKey(),kind:k,qty:delta,amount:k==='p'?delta:Math.round(delta*unitA*100)/100,adj:true};if(k==='e')row.service_id=sid;
+    const nv=k==='r'?Math.round(dec(i.value)):dec(i.value);
+    const delta=Math.round((nv-qtyOf(id,k,sid))*100)/100;if(!delta)return;
+    const row={barber_id:id,month:curKey(),kind:k,qty:k==='r'?delta:0,amount:k==='r'?0:delta,adj:true};if(k==='e')row.service_id=sid;
     const{error}=await sb.from('entries').insert(row);if(error)return fail(error);
     await loadAdmin();await loadRank(curKey());render();toast('Ajustado ✅');
   });
@@ -563,9 +584,7 @@ function renderCfg(el){
    <div id="tiers">${tiers().map((t,i)=>`<div class="g3" style="grid-template-columns:1fr 1fr 40px"><input data-tm="${i}" type="number" inputmode="numeric" min="1" value="${t.min}" aria-label="A partir de R$"><input data-tp="${i}" type="number" inputmode="numeric" min="0" value="${t.pts}" aria-label="Bônus em reais"><button class="iconbtn" data-td="${i}" aria-label="Remover faixa">✕</button></div>`).join('')}</div>
    <p class="note">Esquerda: a partir de quantos reais vendidos. Direita: bônus em reais. Ex.: 300 → 80, 600 → 170, 1200 → 250.</p>
    <button class="btn small ghost" id="addT">+ Adicionar faixa</button>
-   <label>Reel postado (Metagram) — continua em pontos</label><input id="cr" type="number" inputmode="numeric" min="0" value="${num(cfg.reel)}">
-   <div class="g2"><div><label>R$ por 1% de Pódium</label><input id="cpd" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.pod_pts)||0}"></div>
-   <div><label>R$ por 1% de Retorno</label><input id="crt" type="number" inputmode="decimal" step="0.1" min="0" value="${Number(cfg.ret_pts)||0}"></div></div>
+   <label>Reel postado (Metagram) — R$ por reel</label><input id="cr" type="number" inputmode="decimal" step="0.01" min="0" value="${Number(cfg.reel)||0}">
    <p class="note">Deixe 0 se Pódium e Taxa de retorno devem ter só o ranking próprio, sem somar no Destaque do Mês.</p></div>
   <div class="h2">Serviços extras e valores (R$)</div><div class="card">${svc}<p class="note">Esse valor já vem preenchido quando o barbeiro lança, e ele pode editar na hora. Mudar o valor aqui não altera lançamentos antigos.</p><button class="btn small ghost" id="addS" style="margin-top:8px">+ Adicionar serviço</button></div>
   <p class="note">Tudo aqui salva sozinho.</p>`;
@@ -576,9 +595,7 @@ function renderCfg(el){
   el.querySelectorAll('[data-tm],[data-tp]').forEach(i=>i.oninput=()=>saveCfgSoon({prod_tiers:readTiers()}));
   el.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>{const t=readTiers();t.splice(+b.dataset.td,1);saveCfgSoon({prod_tiers:t});render()});
   on(el,'addT',()=>{const t=readTiers();t.push({min:(t.length?t[t.length-1].min:0)+300,pts:0});saveCfgSoon({prod_tiers:t});render()});
-  el.querySelector('#cr').oninput=e=>saveCfgSoon({reel:num(e.target.value)});
-  el.querySelector('#cpd').oninput=e=>saveCfgSoon({pod_pts:dec(e.target.value)});
-  el.querySelector('#crt').oninput=e=>saveCfgSoon({ret_pts:dec(e.target.value)});
+  el.querySelector('#cr').oninput=e=>saveCfgSoon({reel:dec(e.target.value)});
   el.querySelectorAll('[data-sn]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({name:i.value.trim()||'Serviço'}).eq('id',i.dataset.sn);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
   el.querySelectorAll('[data-sp]').forEach(i=>i.onchange=async()=>{const{error}=await sb.from('services').update({pts:dec(i.value)}).eq('id',i.dataset.sp);if(error)return fail(error);await loadCore();toast('Salvo ✅')});
   el.querySelectorAll('[data-sd]').forEach(i=>i.onclick=async()=>{if(!confirm('Remover este serviço? Lançamentos antigos dele deixam de contar pontos.'))return;const{error}=await sb.from('services').delete().eq('id',i.dataset.sd);if(error)return fail(error);await loadCore();render()});
