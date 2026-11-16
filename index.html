@@ -217,7 +217,7 @@ async function afterLogin(){
   try{
     await loadProfile();
     if(!prof||!prof.role){render();return}
-    await loadCore();vm=defaultView();if(isA())await loadRank(vm);await loadMine();
+    await loadCore();vm=defaultView();await loadRank(vm);await loadMine();
     tab=isA()?'total':'launch';render();
   }catch(e){
     console.error(e);
@@ -285,12 +285,12 @@ function render(){
   if(demoM&&isA()&&!preview){const L=leader(demoM);if(L){renderSplash({m:demoM,bid:L.id,name:L.name,pts:L.dp},true);return}demoM=null}
   if(cfg.splash&&cfg.splash.bid&&!splashSeen&&(!isA()||preview)){renderSplash(cfg.splash,false);return}
   const barberTabs=['mine'],adminTabs=['barbers','users','cfg'];
-  if(!tab||(adm&&barberTabs.includes(tab))||(!adm&&(adminTabs.includes(tab)||tab in CATS)))tab=adm?'total':'launch';
+  if(!tab||(adm&&barberTabs.includes(tab))||(!adm&&adminTabs.includes(tab)))tab=adm?'total':'launch';
   if(!vm)vm=defaultView();
   let t='';
   if(!adm)t+=`<button class="tab ${tab==='launch'?'on':''}" data-t="launch">➕ Lançar</button>`;
   if(adm)t+=`<button class="tab adm ${tab==='launch'?'on':''}" data-t="launch">➕ Lançar</button>`;
-  if(adm)Object.entries(CATS).forEach(([k,c])=>t+=`<button class="tab ${tab===k?'on':''}" data-t="${k}">${c.label}</button>`);
+  Object.entries(CATS).forEach(([k,c])=>t+=`<button class="tab ${tab===k?'on':''}" data-t="${k}">${c.label}</button>`);
   if(!adm)t+=`<button class="tab ${tab==='mine'?'on':''}" data-t="mine">📊 Meu painel</button>`;
   if(adm)t+=`<button class="tab adm ${tab==='barbers'?'on':''}" data-t="barbers">👥 Barbeiros</button><button class="tab adm ${tab==='users'?'on':''}" data-t="users">👤 Usuários</button><button class="tab adm ${tab==='cfg'?'on':''}" data-t="cfg">⚙️ Configurar</button>`;
   const inRank=tab in CATS;
@@ -349,7 +349,8 @@ function bindRel(el){
 function renderRank(el,k,adm){
   const d=ranks[vm];
   if(!d){el.innerHTML='<div class="card note">Carregando…</div>';return}
-  const showLock=preview?(pvForce?pvForce==='lock':d.locked):(d.locked&&!isA());
+  const unrel=!(cfg.released||[]).includes(vm);
+  const showLock=k==='total'&&(preview?(pvForce?pvForce==='lock':unrel):(!isA()&&unrel));
   if(showLock){el.innerHTML=renderLock(vm);return}
   const c=CATS[k],F=c.money?numFmt:(c.fmt||(v=>v)),U=c.money?'reais':(c.unit||'pts');
   const list=stats(vm).map(s=>({s,p:c.pts(s)})).sort((a,b)=>b.p-a.p||(k==='total'?b.s.tp-a.s.tp:0)||a.s.name.localeCompare(b.s.name));
